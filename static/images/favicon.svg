@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stem of the 'F' -->
+  <path d="M9 7v18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Top bar of the 'F' -->
+  <path d="M9 7h12" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Middle bar of the 'F' trending upwards -->
+  <path d="M9 16h5l7-7m0 0h-4.5m4.5 0v4.5" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

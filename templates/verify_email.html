@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verified | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+
+{% block content %}
+<main class="error-page-container">
+  
+  <div class="error-card">
+    <!-- Successful Animated Checkmark Box -->
+    <div class="success-animation-overlay" style="position: relative; background: transparent; padding: 0;">
+      <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+        <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
+    </div>
+    
+    <h2 class="error-title" style="margin-top: 10px;">Account Activated</h2>
+    
+    <p class="error-message">
+      Your email address has been successfully verified. Your console profile is now active and secure.<br>
+      Redirecting to login portal in <span id="verifyCountdown">3</span> seconds...
+    </p>
+    
+    <div class="error-actions" style="justify-content: center;">
+      <a href="{{ url_for('login') }}" class="btn btn-primary" style="width: auto; min-width: 140px;">
+        Go to Login
+      </a>
+    </div>
+  </div>
+  
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let secs = 3;
+    const countdownEl = document.getElementById('verifyCountdown');
+    const timer = setInterval(() => {
+      secs--;
+      if (countdownEl) countdownEl.textContent = secs;
+      if (secs <= 0) {
+        clearInterval(timer);
+        window.location.href = "{{ url_for('login') }}";
+      }
+    }, 1000);
+  });
+</script>
+{% endblock %}

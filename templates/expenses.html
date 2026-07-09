@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Expenses | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  <aside class="dash-sidebar">
+    <a href="{{ url_for('dashboard') }}" class="sidebar-logo">
+      <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-text">FinSight</span>
+    </a>
+
+    <ul class="sidebar-nav">
+      <li>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('expenses') }}" class="nav-link active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Expenses</span>
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('budgets') }}" class="nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+          <span>Budget</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">
+        {% if user.profile_image %}
+          <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}">
+        {% else %}
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#12395F,#10B981);font-size:13px;font-weight:700;">{{ user.name[0].upper() }}</div>
+        {% endif %}
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-status">● Active Session</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="dash-main">
+    <header class="dash-header">
+      <div class="dash-header-title">
+        <h1>Expenses</h1>
+        <p>Manage your spending and keep every transaction tied to your account.</p>
+      </div>
+      <div class="dash-header-actions">
+        <a href="{{ url_for('create_expense') }}" class="btn btn-primary" style="width:auto;padding:8px 16px;">Add Expense</a>
+        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn-logout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Logout
+          </button>
+        </form>
+      </div>
+    </header>
+
+    <div class="dash-content">
+      <div class="mock-card" style="padding: 18px; margin-bottom: 18px;">
+        <form method="GET" action="{{ url_for('expenses') }}" class="search-filter-row">
+          <div class="search-box">
+            <input type="text" name="q" class="form-input" placeholder="Search expenses" value="{{ search }}" autocomplete="off">
+          </div>
+          <div class="filter-box">
+            <select name="category" class="form-input">
+              <option value="">All categories</option>
+              {% for option in categories %}
+                <option value="{{ option }}" {% if category == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-box">
+            <select name="sort" class="form-input">
+              <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Sort: Newest first</option>
+              <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Sort: Oldest first</option>
+              <option value="amount_desc" {% if sort == 'amount_desc' %}selected{% endif %}>Sort: Highest amount</option>
+              <option value="amount_asc" {% if sort == 'amount_asc' %}selected{% endif %}>Sort: Lowest amount</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-secondary btn-compact">Apply</button>
+            <a href="{{ url_for('expenses') }}" class="btn btn-compact btn-secondary" style="text-decoration:none;">Reset</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="expense-summary-grid">
+        <div class="mock-card expense-summary-card" style="padding: 18px;">
+          <span class="mock-card-label">Total Expenses</span>
+          <div class="expense-summary-value">{{ format_currency(summary.total_expenses) }}</div>
+          <span class="expense-summary-meta">Across current results</span>
+        </div>
+        <div class="mock-card expense-summary-card" style="padding: 18px;">
+          <span class="mock-card-label">Total Transactions</span>
+          <div class="expense-summary-value">{{ summary.total_transactions }}</div>
+          <span class="expense-summary-meta">Matching entries</span>
+        </div>
+        <div class="mock-card expense-summary-card" style="padding: 18px;">
+          <span class="mock-card-label">Highest Expense</span>
+          <div class="expense-summary-value">{{ format_currency(summary.highest_expense) }}</div>
+          <span class="expense-summary-meta">Largest single transaction</span>
+        </div>
+        <div class="mock-card expense-summary-card" style="padding: 18px;">
+          <span class="mock-card-label">Average Expense</span>
+          <div class="expense-summary-value">{{ format_currency(summary.average_expense) }}</div>
+          <span class="expense-summary-meta">Per transaction</span>
+        </div>
+      </div>
+
+      <div class="mock-card" style="padding: 18px;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-date">Date</th>
+                <th class="col-category">Category</th>
+                <th class="col-description">Description</th>
+                <th class="col-amount">Amount</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if expenses %}
+                {% for expense in expenses %}
+                  <tr>
+                    <td class="td-date">{{ expense.expense_date }}</td>
+                    <td class="td-category">{{ expense.category }}</td>
+                    <td class="td-description">{{ expense.description or '—' }}</td>
+                    <td class="td-amount">{{ format_currency(expense.amount) }}</td>
+                    <td class="td-actions">
+                      <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                      <button type="button" class="btn btn-danger btn-sm"
+                        data-delete-id="{{ expense.id }}"
+                        data-delete-desc="{{ expense.description or expense.category }}"
+                        onclick="openDeleteModal(this)">Delete</button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="5">
+                    <div style="text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                      <span style="font-size:14px;font-weight:600;color:var(--secondary-text);">No expenses found</span>
+                      <span style="font-size:12px;color:var(--secondary-text);opacity:0.6;">{% if search or category %}Try adjusting your filters.{% else %}Start tracking your spending.{% endif %}</span>
+                      {% if not search and not category %}
+                        <a href="{{ url_for('create_expense') }}" class="btn btn-primary" style="width:auto;padding:8px 18px;margin-top:4px;">Add Your First Expense</a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
+  <div style="background:#0d2540;border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:28px 28px 24px;max-width:380px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff;">Delete Expense</div>
+        <div style="font-size:12px;color:var(--secondary-text);opacity:0.7;margin-top:2px;">This action cannot be undone.</div>
+      </div>
+    </div>
+    <p id="deleteModalDesc" style="font-size:13px;color:var(--secondary-text);margin-bottom:22px;line-height:1.5;"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeDeleteModal()" class="btn btn-secondary" style="width:auto;padding:9px 18px;margin:0;">Cancel</button>
+      <form id="deleteModalForm" method="POST" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-danger" style="width:auto;padding:9px 18px;margin:0;">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openDeleteModal(btn) {
+  var id = btn.getAttribute('data-delete-id');
+  var desc = btn.getAttribute('data-delete-desc');
+  document.getElementById('deleteModalDesc').textContent = 'Are you sure you want to delete "' + desc + '"?';
+  document.getElementById('deleteModalForm').action = '/expenses/' + id + '/delete';
+  var modal = document.getElementById('deleteModal');
+  modal.style.display = 'flex';
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDeleteModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+
+{% block content %}
+<main class="error-page-container">
+  <div class="auth-card-container">
+    <div class="auth-card" style="max-width:640px;">
+      <div class="auth-card-header">
+        <h2>{{ page_title }}</h2>
+        <p>{{ page_description }}</p>
+      </div>
+
+      <form action="{{ form_action }}" method="POST" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="input-group">
+            <label for="month" class="input-label">Month</label>
+            <div class="input-wrapper">
+              <select name="month" id="month" class="form-input" required>
+                <option value="" disabled {% if not budget.month %}selected{% endif %}>Select month</option>
+                {% for m in months %}
+                  <option value="{{ m }}" {% if budget.month == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="year" class="input-label">Year</label>
+            <div class="input-wrapper">
+              <input type="number" name="year" id="year" class="form-input" value="{{ budget.year or current_year }}" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="grid-column: span 2;">
+            <label for="amount" class="input-label">Amount</label>
+            <div class="input-wrapper">
+              <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-input" value="{{ budget.amount or '' }}" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="grid-column: span 2;">
+            <label for="description" class="input-label">Description (optional)</label>
+            <div class="input-wrapper">
+              <textarea id="description" name="description" class="form-input" rows="3" style="padding-left:14px;">{{ budget.description or '' }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:10px;">
+          <button class="btn btn-primary" type="submit">{{ submit_text }}</button>
+          <a href="{{ url_for('budgets') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

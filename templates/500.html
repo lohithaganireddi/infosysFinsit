@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}500 – Server Error | FinSight{% endblock %}
+{% block content %}
+<main class="error-page-container">
+  <div class="error-card code-500">
+    <div class="error-illustration">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    <div class="error-code">500</div>
+    <h2 class="error-title">Internal Server Error</h2>
+    <p class="error-message">Something went wrong on our end. Our engineering team has been notified and will resolve this promptly. Your financial data is safe and secure.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('login') }}" class="btn btn-primary" style="width:auto;min-width:140px;">Return to Login</a>
+    </div>
+  </div>
+</main>
+{% endblock %}

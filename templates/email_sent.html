@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Sent | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+
+{% block content %}
+<main class="error-page-container">
+  
+  <div class="error-card code-500">
+    <!-- Send Envelope Icon -->
+    <div class="error-illustration" style="color: var(--primary-accent);">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+    </div>
+    
+    <h2 class="error-title">Verification Link Sent</h2>
+    
+    <p class="error-message">
+      A secure action link has been dispatched to <strong>{{ email }}</strong>.<br>
+      Please check your spam or inbox folders and click the link to authorize the request.
+    </p>
+
+    <!-- Development Mock Sandbox Link Box -->
+    {% if link %}
+    <div style="background: rgba(16, 185, 129, 0.08); border: 1px dashed var(--primary-accent); padding: 14px; border-radius: 8px; width: 100%; margin-bottom: 20px; text-align: left;">
+      <h4 style="font-size: 11px; font-weight: 700; color: var(--primary-accent); text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+        <span>🛠️ Developer Simulation Console</span>
+      </h4>
+      <p style="font-size: 11px; color: var(--secondary-text); margin-bottom: 10px; opacity: 0.8;">
+        Normally this link would arrive in your inbox. Click the button below to verify the session in the sandbox database:
+      </p>
+      <a href="{{ link }}" class="btn btn-primary" style="padding: 10px; font-size: 12px; box-shadow: none;">
+        Simulate Clicking Verification Link
+      </a>
+    </div>
+    {% endif %}
+    
+    <div class="error-actions" style="justify-content: center;">
+      <a href="{{ url_for('login') }}" class="btn btn-secondary" style="width: auto; min-width: 140px; margin-top: 0;">
+        Back to Login
+      </a>
+    </div>
+  </div>
+  
+</main>
+{% endblock %}

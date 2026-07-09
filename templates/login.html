@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+
+{% block content %}
+<main class="auth-container">
+  
+  <!-- Left Side: Branding & Dashboard Mockup Preview -->
+  <section class="branding-panel">
+    <div class="branding-header">
+      <a href="/" class="logo-group">
+        <svg class="logo-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-text">FinSight</span>
+      </a>
+      <span class="version-badge">v2.0 Beta</span>
+    </div>
+    
+    <div class="branding-content">
+      <h1>Smart Finance.<br>Smarter Decisions.</h1>
+      <p class="tagline-sub">Connect all your accounts, track expenses, plan budgets, and get AI-driven investment insights in one unified workspace.</p>
+    </div>
+    
+    <!-- Live Dashboard Preview Widgets -->
+    <div class="dashboard-mockup">
+      <div class="mock-header">
+        <div class="mock-user">
+          <div class="mock-avatar">JD</div>
+          <div class="mock-user-info">
+            <span class="mock-user-name">Jonathan Doe</span>
+            <span class="mock-user-plan">Premium Member</span>
+          </div>
+        </div>
+        <div class="mock-header-actions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </div>
+      </div>
+      
+      <div class="mock-grid">
+        <!-- Total Net Worth Widget -->
+        <div class="mock-card balance-card">
+          <span class="mock-card-label">Total Net Worth</span>
+          <div class="mock-balance-row">
+            <span class="mock-balance-val animate-number" data-target="142384.50" data-prefix="$">$0.00</span>
+            <span class="trend-badge positive">+12.4%</span>
+          </div>
+          <span class="mock-card-footnote">Updated 2 mins ago</span>
+        </div>
+        
+        <!-- Stats widget -->
+        <div class="mock-card quick-stats-card">
+          <div class="stat-col">
+            <span class="mock-card-label">Monthly Income</span>
+            <span class="stat-val animate-number" data-target="12450.00" data-prefix="$">$0.00</span>
+          </div>
+          <div class="stat-col">
+            <span class="mock-card-label">Monthly Expenses</span>
+            <span class="stat-val text-warning animate-number" data-target="4820.00" data-prefix="$">$0.00</span>
+          </div>
+        </div>
+        
+        <!-- Line Chart -->
+        <div class="mock-card chart-card">
+          <div class="card-header-flex">
+            <span class="mock-card-label">Portfolio Growth</span>
+            <span class="card-header-value"><span class="animate-number" data-target="82140.00" data-prefix="$">$0.00</span> <span class="yield-badge">8.7% APY</span></span>
+          </div>
+          <div class="chart-container">
+            <canvas id="portfolioChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Doughnut Expense Chart -->
+        <div class="mock-card doughnut-card">
+          <span class="mock-card-label">Expenses Breakdown</span>
+          <div class="doughnut-container">
+            <canvas id="expenseChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="mock-card transactions-card">
+          <span class="mock-card-label">Recent Activity</span>
+          <div class="transaction-list">
+            <div class="transaction-item" style="animation-delay: 150ms;">
+              <div class="tx-icon tx-income">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+              </div>
+              <div class="tx-details">
+                <span class="tx-title">Stripe Payout</span>
+                <span class="tx-date">July 2, 2026</span>
+              </div>
+              <span class="tx-amount tx-positive animate-number" data-target="4250.00" data-prefix="+$">+$0.00</span>
+            </div>
+            
+            <div class="transaction-item" style="animation-delay: 300ms;">
+              <div class="tx-icon tx-expense">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              </div>
+              <div class="tx-details">
+                <span class="tx-title">AWS Cloud Hosting</span>
+                <span class="tx-date">July 1, 2026</span>
+              </div>
+              <span class="tx-amount tx-negative animate-number" data-target="-248.50" data-prefix="$">-$0.00</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Score Card -->
+        <div class="mock-card health-card">
+          <span class="mock-card-label">Financial Health</span>
+          <div class="health-gauge">
+            <div class="health-val"><span class="animate-number" data-target="94" data-decimals="0">0</span><span class="health-max">/100</span></div>
+            <span class="health-status">Excellent</span>
+          </div>
+          <div class="health-progress-bar">
+            <div class="health-progress-fill" id="healthProgressFill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Right Side: Login Form -->
+  <section class="auth-panel">
+    <div class="auth-card-container">
+      
+      <div class="auth-card">
+        <!-- Secure Badge -->
+        <div class="secure-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Secure Authentication Server</span>
+        </div>
+        
+        <div class="auth-card-header">
+          <h2>Welcome Back</h2>
+          <p>Sign in to your secure console.</p>
+        </div>
+        
+        <!-- Validation Error Banner -->
+        <div class="form-alert error" id="globalError" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span class="alert-message">Please check credentials.</span>
+        </div>
+
+        <form id="loginForm" action="{{ url_for('login') }}" method="POST" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          
+          <!-- Email Input Group -->
+          <div class="input-group">
+            <label for="email" class="input-label">Email Address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </span>
+              <input type="email" id="email" name="email" class="form-input" placeholder="e.g. jonathan@example.com" required autocomplete="email">
+            </div>
+            <span class="field-error-msg" id="emailError"></span>
+          </div>
+          
+          <!-- Password Input Group -->
+          <div class="input-group">
+            <div class="label-flex-row" style="gap:12px;">
+              <label for="password" class="input-label">Password</label>
+              <a href="{{ url_for('forgot_password') }}" class="forgot-link">Forgot Password?</a>
+            </div>
+            <div style="height:12px;" aria-hidden="true"></div>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </span>
+              <input type="password" id="password" name="password" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
+              <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
+                <!-- Eye Icon -->
+                <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <!-- Eye Off Icon -->
+                <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              </button>
+            </div>
+            <span class="field-error-msg" id="passwordError"></span>
+          </div>
+          
+          <!-- Keep logged in row -->
+          <div class="form-utility-row">
+            <label class="checkbox-container">
+              <input type="checkbox" id="rememberMe" name="remember_me">
+              <span class="checkmark"></span>
+              <span class="checkbox-label">Keep me signed in for 30 days</span>
+            </label>
+          </div>
+          
+          <!-- Submit Primary Button -->
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span class="btn-text">Sign In to Console</span>
+            <div class="btn-spinner" style="display: none;"></div>
+          </button>
+          
+          <div class="registration-cta">
+            <span>New to the platform?</span>
+            <a href="{{ url_for('register') }}" class="register-link">Create Account</a>
+          </div>
+        </form>
+        
+        <!-- Trust Footer Area -->
+        <div class="trust-area">
+          <div class="trust-badge">
+            <svg class="trust-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>SSL Protected</span>
+          </div>
+          <div class="trust-badge">
+            <svg class="trust-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Bank Grade Security</span>
+          </div>
+          <div class="trust-badge">
+            <svg class="trust-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Privacy Protected</span>
+          </div>
+          <div class="trust-badge">
+            <svg class="trust-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Secure Auth</span>
+          </div>
+        </div>
+        <div class="trust-footer-sub">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Financial data protected under strict AES-256 standard protocols.</span>
+        </div>
+        
+      </div>
+      
+      <!-- Footer details -->
+      <footer class="auth-footer">
+        <span>&copy; 2026 FinSight Technologies Inc. All rights reserved.</span>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <span class="bullet">&bull;</span>
+          <a href="#">Terms of Service</a>
+          <span class="bullet">&bull;</span>
+          <a href="#">Security Statement</a>
+        </div>
+      </footer>
+      
+    </div>
+  </section>
+  
+</main>
+{% endblock %}

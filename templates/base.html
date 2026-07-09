@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FinSight – Personal Finance & Investment Intelligence Platform. Track expenses, manage budgets, and get smart financial insights.">
+  <meta name="theme-color" content="#081A2F">
+  <title>{% block title %}FinSight – Personal Finance & Investment Intelligence{% endblock %}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN for interactive visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Global Custom Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Backdrop mesh grid and calm glowing points -->
+  <div class="bg-mesh">
+    <div class="blur-blob blob-1"></div>
+    <div class="blur-blob blob-2"></div>
+    <div class="blur-blob blob-3"></div>
+    <div class="financial-grid"></div>
+    <div class="particle-container">
+      <div class="particle p-1"></div>
+      <div class="particle p-2"></div>
+      <div class="particle p-3"></div>
+      <div class="particle p-4"></div>
+      <div class="particle p-5"></div>
+      <div class="particle p-6"></div>
+      <div class="particle p-7"></div>
+      <div class="particle p-8"></div>
+    </div>
+  </div>
+
+  <!-- Reusable alert flash banner block -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alert-container" role="status" aria-live="polite" style="position: fixed; top: 24px; right: 24px; z-index: 1000; max-width: 380px; width: 100%;">
+        {% for category, message in messages %}
+          <div class="form-alert {{ 'success' if category == 'success' else 'error' }}">
+            {% if category == 'success' %}
+              <!-- Shield Check / Checkmark Icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            {% else %}
+              <!-- Warning / Error Icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            {% endif %}
+            <span class="alert-message">{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      <script>
+        // Automatically fade out alerts after 5 seconds
+        setTimeout(() => {
+          document.querySelectorAll('.alert-container .form-alert').forEach(alertEl => {
+            alertEl.style.transition = 'opacity 0.5s ease';
+            alertEl.style.opacity = '0';
+            setTimeout(() => alertEl.remove(), 500);
+          });
+        }, 5000);
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Core Content Block -->
+  {% block content %}{% endblock %}
+
+  <script>
+    window.DEFAULT_CURRENCY = {{ DEFAULT_CURRENCY|tojson }};
+  </script>
+
+  <!-- Javascript Core Logic -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

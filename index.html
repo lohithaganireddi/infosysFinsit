@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | FinSight – Personal Finance & Investment Intelligence</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN for live dashboard preview graphics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  
+  <main class="auth-container">
+    
+    <!-- Abstract Background Grid and Blur Blobs -->
+    <div class="bg-mesh">
+      <div class="blur-blob blob-1"></div>
+      <div class="blur-blob blob-2"></div>
+      <div class="financial-grid"></div>
+    </div>
+    
+    <!-- Left Panel: Branding & Interactive Live Dashboard Preview -->
+    <section class="branding-panel">
+      <div class="branding-header">
+        <div class="logo-group">
+          <!-- Geometric Minimalist SVG Logo combining 'F' and an upward trend graph -->
+          <svg class="logo-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+            <!-- Stem of the 'F' -->
+            <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Top bar of the 'F' -->
+            <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Middle bar of the 'F' that trends upwards into a graph line -->
+            <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="logo-text">FinSight</span>
+        </div>
+        <span class="version-badge">v2.0 Beta</span>
+      </div>
+      
+      <div class="branding-content">
+        <h1>Smart Finance.<br>Smarter Decisions.</h1>
+        <p class="tagline-sub">Connect all your accounts, track expenses, plan budgets, and get AI-driven investment insights in one unified workspace.</p>
+      </div>
+      
+      <!-- Live Dashboard Preview (High Fidelity Mockup) -->
+      <div class="dashboard-mockup">
+        <!-- Mockup Top Bar -->
+        <div class="mock-header">
+          <div class="mock-user">
+            <div class="mock-avatar">JD</div>
+            <div class="mock-user-info">
+              <span class="mock-user-name">Jonathan Doe</span>
+              <span class="mock-user-plan">Premium Member</span>
+            </div>
+          </div>
+          <div class="mock-header-actions">
+            <!-- Search Icon (Inline SVG) -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <!-- Bell Notification Icon (Inline SVG) -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </div>
+        </div>
+        
+        <!-- Mockup Grid Content -->
+        <div class="mock-grid">
+          <!-- Total Balance Widget -->
+          <div class="mock-card balance-card">
+            <span class="mock-card-label">Total Net Worth</span>
+            <div class="mock-balance-row">
+              <span class="mock-balance-val">$142,384.50</span>
+              <span class="trend-badge positive">+12.4%</span>
+            </div>
+            <span class="mock-card-footnote">Updated 2 mins ago</span>
+          </div>
+          
+          <!-- Quick Stats Widget -->
+          <div class="mock-card quick-stats-card">
+            <div class="stat-col">
+              <span class="mock-card-label">Monthly Income</span>
+              <span class="stat-val">$12,450.00</span>
+            </div>
+            <div class="stat-col">
+              <span class="mock-card-label">Monthly Expenses</span>
+              <span class="stat-val text-warning">$4,820.00</span>
+            </div>
+          </div>
+          
+          <!-- Investment Chart Widget -->
+          <div class="mock-card chart-card">
+            <div class="card-header-flex">
+              <span class="mock-card-label">Portfolio Growth</span>
+              <span class="card-header-value">$82,140.00 <span class="yield-badge">8.7% APY</span></span>
+            </div>
+            <div class="chart-container">
+              <canvas id="portfolioChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Expenses Breakdown Card -->
+          <div class="mock-card doughnut-card">
+            <span class="mock-card-label">Expenses Breakdown</span>
+            <div class="doughnut-container">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Recent Transactions Widget -->
+          <div class="mock-card transactions-card">
+            <span class="mock-card-label">Recent Activity</span>
+            <div class="transaction-list">
+              <div class="transaction-item">
+                <div class="tx-icon tx-income">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                </div>
+                <div class="tx-details">
+                  <span class="tx-title">Stripe Payout</span>
+                  <span class="tx-date">July 2, 2026</span>
+                </div>
+                <span class="tx-amount tx-positive">+$4,250.00</span>
+              </div>
+              
+              <div class="transaction-item">
+                <div class="tx-icon tx-expense">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                </div>
+                <div class="tx-details">
+                  <span class="tx-title">AWS Cloud Hosting</span>
+                  <span class="tx-date">July 1, 2026</span>
+                </div>
+                <span class="tx-amount tx-negative">-$248.50</span>
+              </div>
+              
+              <div class="transaction-item">
+                <div class="tx-icon tx-expense">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                </div>
+                <div class="tx-details">
+                  <span class="tx-title">Slack Technologies</span>
+                  <span class="tx-date">June 28, 2026</span>
+                </div>
+                <span class="tx-amount tx-negative">-$80.00</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Financial Health Card -->
+          <div class="mock-card health-card">
+            <span class="mock-card-label">Financial Health Score</span>
+            <div class="health-gauge">
+              <div class="health-val">94<span class="health-max">/100</span></div>
+              <span class="health-status">Excellent</span>
+            </div>
+            <div class="health-progress-bar">
+              <div class="health-progress-fill" style="width: 94%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Right Panel: Login Card & Trust Section -->
+    <section class="auth-panel">
+      <div class="auth-card-container">
+        
+        <div class="auth-card">
+          <!-- Secure Badge -->
+          <div class="secure-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>SSL Secured Portal</span>
+          </div>
+          
+          <div class="auth-card-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your FinSight secure console.</p>
+          </div>
+          
+          <!-- Form Element -->
+          <form id="loginForm" novalidate>
+            
+            <!-- Global error display area -->
+            <div class="form-alert error" id="globalError" style="display: none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span class="alert-message">Please correct the highlighted errors.</span>
+            </div>
+
+            <!-- Email Input Group -->
+            <div class="input-group">
+              <label for="email" class="input-label">Email Address</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </span>
+                <input type="email" id="email" class="form-input" placeholder="e.g. jonathan@example.com" required autocomplete="email">
+              </div>
+              <span class="field-error-msg" id="emailError"></span>
+            </div>
+            
+            <!-- Password Input Group -->
+            <div class="input-group">
+              <div class="label-flex-row">
+                <label for="password" class="input-label">Password</label>
+                <a href="#" class="forgot-link">Forgot Password?</a>
+              </div>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </span>
+                <input type="password" id="password" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
+                <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
+                  <!-- Eye Icon (shown default) -->
+                  <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <!-- Eye Off Icon (hidden default) -->
+                  <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+              </div>
+              <span class="field-error-msg" id="passwordError"></span>
+            </div>
+            
+            <!-- Remember Me Row -->
+            <div class="form-utility-row">
+              <label class="checkbox-container">
+                <input type="checkbox" id="rememberMe">
+                <span class="checkmark"></span>
+                <span class="checkbox-label">Keep me signed in for 30 days</span>
+              </label>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <span class="btn-text">Sign In to Dashboard</span>
+              <div class="btn-spinner" style="display: none;"></div>
+            </button>
+            
+            <!-- Secondary Registration CTA -->
+            <div class="registration-cta">
+              <span>Don't have an account?</span>
+              <a href="#" class="register-link">Create Free Account</a>
+            </div>
+            
+          </form>
+          
+          <!-- Secure Trust Section -->
+          <div class="trust-section">
+            <div class="trust-icon-box">
+              <!-- Shield Check Icon -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <div class="trust-details">
+              <h4>🔒 256-bit Secure Encryption</h4>
+              <p>Your financial data is encrypted and protected at bank-grade security standards.</p>
+            </div>
+          </div>
+          
+        </div>
+        
+        <!-- Auth Panel Footer -->
+        <footer class="auth-footer">
+          <span>&copy; 2026 FinSight Technologies Inc. All rights reserved.</span>
+          <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <span class="bullet">&bull;</span>
+            <a href="#">Terms of Service</a>
+            <span class="bullet">&bull;</span>
+            <a href="#">Security Statement</a>
+          </div>
+        </footer>
+        
+      </div>
+    </section>
+    
+  </main>
+  
+  <!-- Custom JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

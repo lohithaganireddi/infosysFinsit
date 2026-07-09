@@ -1,0 +1,9 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <!-- Stem of the 'F' -->
+  <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Top bar of the 'F' -->
+  <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Middle bar of the 'F' that trends upwards into a graph line -->
+  <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

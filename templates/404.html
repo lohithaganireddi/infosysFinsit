@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}404 – Page Not Found | FinSight{% endblock %}
+{% block content %}
+<main class="error-page-container">
+  <div class="error-card">
+    <div class="error-illustration">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <line x1="11" y1="8" x2="11" y2="12"></line><line x1="11" y1="16" x2="11.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="error-code">404</div>
+    <h2 class="error-title">Page Not Found</h2>
+    <p class="error-message">The page you are looking for doesn't exist or has been moved. Please check the URL or navigate back to the dashboard.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="width:auto;min-width:140px;">Back to Dashboard</a>
+      <a href="{{ url_for('login') }}" class="btn btn-secondary" style="width:auto;min-width:140px;margin-top:0;">Back to Login</a>
+    </div>
+  </div>
+</main>
+{% endblock %}
