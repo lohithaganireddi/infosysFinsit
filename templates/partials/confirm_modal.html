@@ -1,0 +1,17 @@
+<div id="confirmModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <p>Are you sure?</p>
+    <button type="button" id="confirmYes">Yes</button>
+    <button type="button" id="confirmNo">No</button>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const confirmNo = document.getElementById('confirmNo');
+    if (confirmNo) {
+      confirmNo.addEventListener('click', function() {
+        document.getElementById('confirmModal').style.display = 'none';
+      });
+    }
+  });
+</script>

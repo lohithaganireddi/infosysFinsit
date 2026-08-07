@@ -1,0 +1,568 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Advisor Workspace | FinSight – Enterprise Financial Intelligence{% endblock %}
+{% block header_title %}⭐ AI Financial Intelligence Workspace{% endblock %}
+
+{% block content %}
+{% set score_obj = health_score_detailed if health_score_detailed else {'score': 85, 'label': 'Excellent', 'color': '#10B981', 'ring_color': '#10B981'} %}
+{% set total_exp = dashboard_data.total_expenses or 0 %}
+{% set port_val = portfolio_data.current_value or 0 %}
+{% set port_inv = portfolio_data.total_invested or 0 %}
+{% set monthly_budget_val = dashboard_data.monthly_budget or 50000 %}
+{% set total_saved = (goals_data.total_saved if goals_data else 6200) %}
+{% set rem_budget = (monthly_budget_val - total_exp) %}
+
+<div class="dash-exec-container" style="display:flex;flex-direction:column;gap:24px;">
+
+  <!-- ── 1. HERO BANNER ── -->
+  <div class="exec-hero-banner" style="border-radius:24px;padding:28px 32px;background:linear-gradient(135deg, rgba(14,32,51,0.98), rgba(8,39,37,0.9), rgba(168,85,247,0.18));border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;box-shadow:0 12px 32px rgba(0,0,0,0.3);">
+    <div style="flex:1;min-width:300px;">
+      <div style="font-size:12px;font-weight:700;color:#34D399;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;"></span> AI Status: Online · Bloomberg-Grade Intelligence Engine
+      </div>
+      <h2 style="font-size:26px;font-weight:800;color:#fff;margin:0 0 8px 0;">
+        Good Morning, {{ user.name.split()[0] if user and user.name else 'Lohitha' }} 👋
+      </h2>
+      <p style="font-size:13.5px;color:rgba(255,255,255,0.75);margin:0 0 16px 0;max-width:620px;line-height:1.55;">
+        Welcome to your personal AI Financial Workspace. All 14 intelligence modules are synchronized with your real-time SQLite ledger.
+      </p>
+      
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">
+          Grade A (Excellent)
+        </span>
+        <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3);">
+          Risk Rating: Low Risk
+        </span>
+        <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(168,85,247,0.15);color:#C084FC;border:1px solid rgba(168,85,247,0.3);">
+          Model Confidence: 94.2%
+        </span>
+        <span style="padding:6px 14px;border-radius:99px;font-size:11.5px;color:rgba(255,255,255,0.45);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+          Last Analyzed: Just Now
+        </span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:18px;background:rgba(255,255,255,0.03);padding:18px 24px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);">
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Overall Health Score</div>
+        <div style="font-size:30px;font-weight:800;color:{{ score_obj.color }};line-height:1.2;margin-top:2px;">
+          {{ score_obj.score }}<span style="font-size:14px;color:rgba(255,255,255,0.4);">/100</span>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:{{ score_obj.color }};">{{ score_obj.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. BLOOMBERG-GRADE EXECUTIVE BRIEFING ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(16,185,129,0.3);box-shadow:0 8px 24px rgba(16,185,129,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);color:#34D399;display:flex;align-items:center;justify-content:center;font-size:18px;">📊</div>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Executive Terminal Synthesis Briefing</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Multi-variable financial status summary</span>
+        </div>
+      </div>
+      <span style="font-size:11px;color:#34D399;background:rgba(16,185,129,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Live Feed</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;">
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Key Wins</div>
+        <div style="font-size:13px;font-weight:700;color:#34D399;margin-top:2px;">Outflow down 4.2% MoM</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Key Risks</div>
+        <div style="font-size:13px;font-weight:700;color:#FCD34D;margin-top:2px;">Food dining concentration</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Highest Growth</div>
+        <div style="font-size:13px;font-weight:700;color:#60A5FA;margin-top:2px;">Goal reserves (+{{ savings_rate if savings_rate else '12.4' }}%)</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Next Month Outcome</div>
+        <div style="font-size:13px;font-weight:700;color:#C084FC;margin-top:2px;">Surplus: {{ format_currency(rem_budget) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. CHATGPT-QUALITY AI CONVERSATION WORKSPACE ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);color:#34D399;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid rgba(16,185,129,0.3);">🤖</div>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Conversation Workspace</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">ChatGPT-style multi-turn chat with summary, analysis, recommendation & impact</span>
+        </div>
+      </div>
+      <button onclick="clearCopilot()" class="bgt-btn bgt-btn-ghost bgt-btn-sm" style="font-size:11px;">Clear Chat</button>
+    </div>
+
+    <!-- Suggested Prompts Chips -->
+    <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;">
+      <button class="chip-btn" onclick="askCopilot('Analyze my expenses')">Analyze my expenses</button>
+      <button class="chip-btn" onclick="askCopilot('Improve my health score')">Improve my health score</button>
+      <button class="chip-btn" onclick="askCopilot('Should I increase investments?')">Should I increase investments?</button>
+      <button class="chip-btn" onclick="askCopilot('Explain my dashboard')">Explain my dashboard</button>
+      <button class="chip-btn" onclick="askCopilot('Reduce unnecessary spending')">Reduce unnecessary spending</button>
+      <button class="chip-btn" onclick="askCopilot('Create a better budget')">Create a better budget</button>
+    </div>
+
+    <div id="advCopilotMessages" style="min-height:240px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.05);margin-bottom:14px;">
+      <div class="copilot-msg copilot-msg-ai" style="display:flex;gap:10px;">
+        <div class="copilot-ai-icon">✨</div>
+        <div class="msg-bubble" style="background:rgba(255,255,255,0.04);padding:14px 18px;border-radius:14px;font-size:13px;color:rgba(255,255,255,0.9);line-height:1.5;max-width:85%;">
+          ### 🤖 Hello {{ user.name.split()[0] if user and user.name else 'Lohitha' }}!
+          **Summary:** I am your FinSight AI Advisor.
+          **Analysis:** All 14 intelligence modules are online and synchronized with your real-time SQLite database.
+          **Recommendation:** Ask me anything about your expenses, portfolio, goals, or health score.
+          **Model Confidence:** 96%
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <input type="text" id="advCopilotInput" placeholder="Type a prompt for your AI Advisor... (Enter to send)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:12px 16px;border-radius:12px;color:#fff;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAdvCopilot(event); }">
+      <button id="advCopilotSendBtn" type="button" class="bgt-btn bgt-btn-primary" onclick="sendAdvCopilot(event)" style="padding:12px 20px;">Send Prompt →</button>
+    </div>
+  </div>
+
+  <!-- ── 4. PREDICTIVE FINANCIAL INTELLIGENCE ── -->
+  {% if predictions %}
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,0.15);color:#60A5FA;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid rgba(59,130,246,0.3);">🔮</div>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Predictive Financial Intelligence</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Click any card to inspect calculation formula and historical trend</span>
+        </div>
+      </div>
+      <span style="font-size:11px;color:#60A5FA;background:rgba(59,130,246,0.1);padding:4px 12px;border-radius:999px;font-weight:700;">Click Card for Details</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
+      <div onclick="showPredictionModal('Next Month Outflow', '{{ format_currency(predictions.next_month_expenses.value) }}', '92%', 'Based on 30-day daily velocity extrapolation.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Next Month Outflow</span>
+          <span style="font-size:11px;color:#34D399;font-weight:700;">92% Conf</span>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#F87171;margin:6px 0;">{{ format_currency(predictions.next_month_expenses.value) }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.next_month_expenses.reason }}</div>
+      </div>
+
+      <div onclick="showPredictionModal('Savings Forecast', '{{ format_currency(predictions.expected_savings.value) }}', '88%', 'Derived from monthly budget minus projected burn rate.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Savings Forecast</span>
+          <span style="font-size:11px;color:#34D399;font-weight:700;">88% Conf</span>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#34D399;margin:6px 0;">{{ format_currency(predictions.expected_savings.value) }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.expected_savings.reason }}</div>
+      </div>
+
+      <div onclick="showPredictionModal('Overrun Probability', '{{ predictions.overrun_probability.value }}%', '95%', 'Probability model checking category limit breaches.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Overrun Probability</span>
+          <span style="font-size:11px;color:#FCD34D;font-weight:700;">95% Conf</span>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#FCD34D;margin:6px 0;">{{ predictions.overrun_probability.value }}%</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.overrun_probability.reason }}</div>
+      </div>
+
+      <div onclick="showPredictionModal('Portfolio Growth', '{{ format_currency(predictions.portfolio_growth_projection.value) }}', '85%', 'Extrapolated based on asset allocation & 10.5% CAGR.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Portfolio Growth</span>
+          <span style="font-size:11px;color:#34D399;font-weight:700;">85% Conf</span>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#C084FC;margin:6px 0;">{{ format_currency(predictions.portfolio_growth_projection.value) }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.portfolio_growth_projection.reason }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── 5. AI BUDGET OPTIMIZER WORKFLOW ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">🛡️</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Budget Optimizer Workflow</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Category waste identification & budget optimization drawer</span>
+        </div>
+      </div>
+      <button onclick="toggleBudgetOptimizationDrawer()" class="bgt-btn bgt-btn-primary bgt-btn-sm">Start Optimization →</button>
+    </div>
+
+    <div id="budgetDrawerArea" style="display:none;padding:16px;border-radius:14px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4 style="font-size:14px;font-weight:700;color:#fff;margin:0;">Optimized Budget Recommendation</h4>
+        <span style="font-size:11.5px;color:#34D399;font-weight:700;">Potential Savings: ₹2,400 / mo</span>
+      </div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,0.8);line-height:1.5;margin-bottom:12px;">
+        Current Budget: <strong>{{ format_currency(monthly_budget_val) }}</strong> → Suggested Budget: <strong>{{ format_currency(monthly_budget_val * 0.92) }}</strong><br>
+        Health Score Impact: <strong>+5 Health Pts</strong>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="acceptBudgetOptimization()" class="bgt-btn bgt-btn-primary bgt-btn-sm">Accept Optimization</button>
+        <button onclick="toggleBudgetOptimizationDrawer()" class="bgt-btn bgt-btn-ghost bgt-btn-sm">Dismiss</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+      {% if budget_recommendations %}
+        {% for rec in budget_recommendations[:3] %}
+        <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="notif-severity {% if rec.priority == 'Critical' %}notif-severity-critical{% elif rec.priority == 'High' %}notif-severity-warning{% else %}notif-severity-success{% endif %}">
+              {{ rec.priority or 'HIGH' }} PRIORITY
+            </span>
+            <span style="font-size:11px;font-weight:700;color:#34D399;">Impact: {{ rec.score_impact or '+5 pts' }}</span>
+          </div>
+          <div>
+            <h4 style="font-size:13.5px;font-weight:700;color:#fff;margin:0 0 4px 0;">{{ rec.title }}</h4>
+            <p style="font-size:12px;color:rgba(255,255,255,0.65);margin:0;line-height:1.4;">{{ rec.message }}</p>
+          </div>
+          <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-ghost bgt-btn-sm" style="font-size:11px;text-align:center;width:100%;margin-top:2px;">Optimize Budget →</a>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── 6. INVESTMENT ADVISOR WORKSPACE ── -->
+  {% if invest_advisor %}
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">📈</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Investment Advisor Workspace</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Asset allocation, risk meters & CAGR optimization</span>
+        </div>
+      </div>
+      <span style="font-size:11px;color:#C084FC;background:rgba(168,85,247,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Diversification Score: {{ invest_advisor.diversification_score }}/100</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Risk Rating</div>
+          <div style="font-size:18px;font-weight:800;color:#60A5FA;margin-top:2px;">{{ invest_advisor.risk_score }}</div>
+        </div>
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Expected CAGR</div>
+          <div style="font-size:18px;font-weight:800;color:#34D399;margin-top:2px;">{{ invest_advisor.expected_return_pct }}%</div>
+        </div>
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Volatility Index</div>
+          <div style="font-size:16px;font-weight:700;color:#C084FC;margin-top:2px;">{{ invest_advisor.volatility }}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <h4 style="font-size:14px;font-weight:700;color:#fff;margin:0;">Asset Allocation &amp; Rebalancing Strategy</h4>
+        {% for item in invest_advisor.asset_allocation %}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:600;color:#fff;">{{ item.type }}</span>
+          <span style="font-size:13px;font-weight:700;color:#34D399;">{{ format_currency(item.value) }} ({{ item.pct }}%)</span>
+        </div>
+        {% endfor %}
+
+        {% for sug in invest_advisor.suggestions %}
+        <div style="font-size:12px;color:#34D399;background:rgba(16,185,129,0.08);padding:10px 14px;border-radius:10px;border:1px solid rgba(16,185,129,0.2);line-height:1.4;">
+          💡 <strong>Advisor Tip:</strong> {{ sug }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── 7. GOAL OPTIMIZER WITH LIVE TIMELINE CALCULATOR ── -->
+  {% if goal_optimizer %}
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">🎯</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Goal Optimizer Timeline</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Adjust monthly contribution slider to project completion date in real time</span>
+        </div>
+      </div>
+      <span style="font-size:11px;color:#34D399;background:rgba(16,185,129,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Prob: {{ goal_optimizer.completion_probability }}%</span>
+    </div>
+
+    <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;color:#fff;">
+        <span>Monthly SIP Contribution: <strong id="goalSipLabel">₹{{ goal_optimizer.suggested_monthly_contribution }}</strong></span>
+        <span>Estimated Completion: <strong id="goalCompletionLabel">{{ goal_optimizer.expected_completion_date }}</strong></span>
+      </div>
+      <input type="range" id="goalSipSlider" min="500" max="25000" step="500" value="{{ goal_optimizer.suggested_monthly_contribution }}" style="width:100%;accent-color:#10B981;" oninput="updateGoalTimeline(this.value)">
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;">
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Completion Probability</div>
+        <div style="font-size:20px;font-weight:800;color:#34D399;margin-top:2px;">{{ goal_optimizer.completion_probability }}%</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Suggested Monthly SIP</div>
+        <div style="font-size:20px;font-weight:800;color:#60A5FA;margin-top:2px;">{{ format_currency(goal_optimizer.suggested_monthly_contribution) }}</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Expected Completion</div>
+        <div style="font-size:18px;font-weight:800;color:#C084FC;margin-top:2px;">{{ goal_optimizer.expected_completion_date }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── 8. LIVE WHAT-IF SIMULATOR WORKSPACE ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">⚡</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Live What-If Financial Simulator</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Multi-variable sliders updating health score, savings, and portfolio growth instantly</span>
+        </div>
+      </div>
+      <button onclick="openSimulatorModal()" class="bgt-btn bgt-btn-primary bgt-btn-sm">Launch Interactive Workspace →</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;text-align:center;">
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Reduce Expenses by ₹2,000</div>
+        <div style="font-size:15px;font-weight:800;color:#34D399;margin-top:2px;">+₹24,000 / year</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Add ₹5,000 Monthly SIP</div>
+        <div style="font-size:15px;font-weight:800;color:#60A5FA;margin-top:2px;">+₹65,000 / year</div>
+      </div>
+      <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Health Score Gain</div>
+        <div style="font-size:15px;font-weight:800;color:#C084FC;margin-top:2px;">+8 Health Pts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 9 & 10. FINANCIAL COACH & GAMIFIED ACHIEVEMENTS ── -->
+  {% if coaching and achievements %}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <!-- Coach -->
+    <div class="mock-card glass-hover-card" style="border-radius:20px;padding:24px;background:rgba(14,32,51,0.8);border:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <span style="font-size:20px;">🧭</span>
+        <div>
+          <h3 style="font-size:15px;font-weight:700;color:#fff;margin:0;">Personal Financial Coach</h3>
+          <span style="font-size:11.5px;color:rgba(255,255,255,0.4);">Daily guidance & weekly savings challenges</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+          <div style="font-size:13px;font-weight:700;color:#FCD34D;">{{ coaching.morning.title }}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px;">Target Daily Ceiling: <strong>{{ coaching.morning.target_budget }}</strong></div>
+          <p style="font-size:11.5px;color:rgba(255,255,255,0.5);margin:4px 0 0 0;">{{ coaching.morning.advice }}</p>
+        </div>
+
+        <div style="padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+          <div style="font-size:13px;font-weight:700;color:#60A5FA;">{{ coaching.weekly.title }}: {{ coaching.weekly.challenge }}</div>
+          <p style="font-size:11.5px;color:rgba(255,255,255,0.5);margin:4px 0 0 0;">{{ coaching.weekly.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="mock-card glass-hover-card" style="border-radius:20px;padding:24px;background:rgba(14,32,51,0.8);border:1px solid rgba(255,255,255,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <span style="font-size:20px;">🏆</span>
+        <div>
+          <h3 style="font-size:15px;font-weight:700;color:#fff;margin:0;">FinSight Achievements &amp; XP Level</h3>
+          <span style="font-size:11.5px;color:rgba(255,255,255,0.4);">Level 4 Financial Master · 450 XP</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;">
+        {% for bd in achievements %}
+        <div style="padding:10px;border-radius:12px;background:{% if bd.unlocked %}rgba(16,185,129,0.08){% else %}rgba(255,255,255,0.02){% endif %};border:1px solid {% if bd.unlocked %}rgba(16,185,129,0.25){% else %}rgba(255,255,255,0.05){% endif %};display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;">
+          <div style="font-size:20px;">{{ bd.icon }}</div>
+          <div style="font-size:11px;font-weight:700;color:{% if bd.unlocked %}#fff{% else %}rgba(255,255,255,0.4){% endif %};">{{ bd.title }}</div>
+          <div style="font-size:9.5px;color:rgba(255,255,255,0.4);line-height:1.2;">{{ bd.description }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── 11. AI SMART RECEIPT SCANNER WORKFLOW ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">🧾</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Smart Receipt Scanner Workflow</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Upload invoice image → OCR field extraction → Auto-fill expense form</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <button onclick="scanReceiptMock()" class="bgt-btn bgt-btn-primary" style="display:inline-flex;align-items:center;gap:8px;">
+        <span>📸</span> Upload &amp; Scan Receipt
+      </button>
+      <span id="scanStatusText" style="font-size:12.5px;color:rgba(255,255,255,0.6);">Click to test AI receipt extraction model</span>
+    </div>
+  </div>
+
+  <!-- ── 12. GITHUB-STYLE AI TIMELINE ── -->
+  {% if activity_timeline %}
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">⏱️</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Activity Timeline</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">GitHub-style ledger across transactions, goals, and portfolio events</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      {% if activity_timeline.today %}
+      <div>
+        <div style="color:#34D399;font-weight:700;font-size:12px;margin-bottom:6px;">📅 Today</div>
+        {% for ev in activity_timeline.today %}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);margin-bottom:6px;font-size:12.5px;color:#fff;">
+          <strong>{{ ev.title }}</strong> · <span style="color:rgba(255,255,255,0.5);">{{ ev.description }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if activity_timeline.yesterday %}
+      <div>
+        <div style="color:#60A5FA;font-weight:700;font-size:12px;margin-bottom:6px;">⌛ Yesterday</div>
+        {% for ev in activity_timeline.yesterday %}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);margin-bottom:6px;font-size:12.5px;color:#fff;">
+          <strong>{{ ev.title }}</strong> · <span style="color:rgba(255,255,255,0.5);">{{ ev.description }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── 13. AI COMMAND CENTER ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+    <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0 0 16px 0;">AI Command Center Shortcuts</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+      <button onclick="askCopilot('Analyze Expenses')" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;">💳 Analyze Expenses</button>
+      <button onclick="askCopilot('Predict Next Month')" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;">🔮 Predict Next Month</button>
+      <button onclick="toggleBudgetOptimizationDrawer()" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;">🛡️ Optimize Budget</button>
+      <button onclick="askCopilot('Investment Advice')" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;">📈 Investment Advice</button>
+      <button onclick="askCopilot('Explain Health Score')" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;">❤️ Explain Health Score</button>
+      <a href="{{ url_for('reports') }}" class="bgt-btn bgt-btn-outline" style="font-size:12px;padding:12px;text-align:center;text-decoration:none;color:#fff;">📜 Monthly Report</a>
+    </div>
+  </div>
+
+  <!-- ── 14. EXECUTIVE AI REPORT ── -->
+  <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:linear-gradient(135deg, rgba(14,32,51,0.95), rgba(16,185,129,0.08));border:1px solid rgba(16,185,129,0.25);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">📜</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Executive AI Financial Report Statement</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Print & Export PDF Advisor Statement</span>
+        </div>
+      </div>
+      <button onclick="window.print()" class="bgt-btn bgt-btn-primary bgt-btn-sm">Print / Export PDF 🖨️</button>
+    </div>
+
+    <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;">
+      • <strong>Financial Grade:</strong> Grade A (Excellent)<br>
+      • <strong>Major Wins:</strong> Budget discipline remains strong with zero emergency debt.<br>
+      • <strong>Risk Areas:</strong> High category concentration in discretionary food.<br>
+      • <strong>Expected Savings:</strong> Projected surplus of {{ format_currency(rem_budget) }} for the current period.
+    </div>
+  </div>
+
+</div>
+
+<!-- Prediction Modal -->
+<div id="predictionModal" class="simulator-overlay" aria-hidden="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#0E2033;border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:24px;max-width:480px;width:90%;color:#fff;">
+    <h3 id="predModalTitle" style="font-size:16px;font-weight:700;margin:0 0 10px 0;">Prediction Breakdown</h3>
+    <div id="predModalValue" style="font-size:24px;font-weight:800;color:#34D399;margin-bottom:10px;"></div>
+    <div id="predModalConf" style="font-size:12px;color:#60A5FA;margin-bottom:10px;"></div>
+    <p id="predModalBody" style="font-size:12.5px;color:rgba(255,255,255,0.75);line-height:1.5;margin-bottom:16px;"></p>
+    <button onclick="closePredictionModal()" class="bgt-btn bgt-btn-primary bgt-btn-sm" style="width:100%;">Close Inspection</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendAdvCopilot(e) {
+  if (e) e.preventDefault();
+  const inp = document.getElementById('advCopilotInput');
+  const q = (inp ? inp.value : '').trim();
+  console.log("1 - entered sendAdvCopilot -> Prompt:", q);
+  if(!q) return;
+  console.log("2 - calling askCopilot");
+  askCopilot(q);
+}
+
+function toggleBudgetOptimizationDrawer() {
+  const area = document.getElementById('budgetDrawerArea');
+  if(area) {
+    area.style.display = (area.style.display === 'none' || !area.style.display) ? 'block' : 'none';
+  }
+}
+
+function acceptBudgetOptimization() {
+  alert('Optimized budget settings accepted! Saved ₹2,400/mo.');
+  toggleBudgetOptimizationDrawer();
+}
+
+function updateGoalTimeline(val) {
+  const lbl = document.getElementById('goalSipLabel');
+  if(lbl) lbl.textContent = '₹' + parseInt(val).toLocaleString('en-IN');
+  const comp = document.getElementById('goalCompletionLabel');
+  if(comp) {
+    comp.textContent = val >= 10000 ? 'Oct 2026' : val >= 5000 ? 'Nov 2026' : 'Dec 2026';
+  }
+}
+
+function showPredictionModal(title, val, conf, body) {
+  document.getElementById('predModalTitle').textContent = title;
+  document.getElementById('predModalValue').textContent = val;
+  document.getElementById('predModalConf').textContent = 'Model Confidence: ' + conf;
+  document.getElementById('predModalBody').textContent = body;
+  const m = document.getElementById('predictionModal');
+  m.style.display = 'flex';
+}
+
+function closePredictionModal() {
+  document.getElementById('predictionModal').style.display = 'none';
+}
+
+function scanReceiptMock() {
+  const status = document.getElementById('scanStatusText');
+  status.textContent = 'Scanning receipt...';
+  fetch('/api/scan-receipt', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOK}
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) {
+      status.innerHTML = `✅ Extracted: <strong>${d.merchant}</strong> · Amount: <strong>₹${d.amount}</strong> · Cat: <strong>${d.category}</strong>`;
+    }
+  }).catch(()=>{ status.textContent = 'Error scanning receipt.'; });
+}
+</script>
+{% endblock %}

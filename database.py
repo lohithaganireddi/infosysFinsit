@@ -54,6 +54,32 @@ def init_db(app=None):
     # Create email index for rapid searches
     cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)')
 
+    # Create categories table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )
+    ''')
+
+    # Populate categories
+    default_categories = ['Food', 'Transport', 'Bills', 'Shopping', 'Entertainment', 'Education', 'Healthcare', 'Investment', 'Travel', 'Other']
+    for cat in default_categories:
+        cursor.execute('INSERT OR IGNORE INTO categories (name) VALUES (?)', (cat,))
+
+    # Create payment_methods table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payment_methods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )
+    ''')
+
+    # Populate payment methods
+    default_methods = ['Cash', 'UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet']
+    for method in default_methods:
+        cursor.execute('INSERT OR IGNORE INTO payment_methods (name) VALUES (?)', (method,))
+
     # Create expenses table for user-specific expense tracking
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS expenses (
@@ -61,17 +87,26 @@ def init_db(app=None):
             user_id INTEGER NOT NULL,
             category TEXT NOT NULL,
             amount REAL NOT NULL,
-            currency TEXT NOT NULL DEFAULT 'USD',
+            payment_method TEXT NOT NULL DEFAULT 'Cash',
+            currency TEXT NOT NULL DEFAULT 'INR',
             description TEXT,
             expense_date DATE NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (category) REFERENCES categories(name) ON DELETE RESTRICT,
+            FOREIGN KEY (payment_method) REFERENCES payment_methods(name) ON DELETE RESTRICT
         )
     ''')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_expenses_expense_date ON expenses(expense_date)')
+
+    # Run migrations for existing expenses table if needed
+    cursor.execute('PRAGMA table_info(expenses)')
+    cols = [row[1] for row in cursor.fetchall()]
+    if 'payment_method' not in cols:
+        cursor.execute("ALTER TABLE expenses ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'Cash'")
 
     # Create budgets table for monthly user budgets
     cursor.execute('''
@@ -81,14 +116,78 @@ def init_db(app=None):
             month TEXT NOT NULL,
             year INTEGER NOT NULL,
             amount REAL NOT NULL,
+            category TEXT,
             description TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            UNIQUE (user_id, month, year)
+            FOREIGN KEY (category) REFERENCES categories(name) ON DELETE CASCADE,
+            UNIQUE (user_id, month, year, category)
         )
     ''')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)')
+
+    # Run migrations for existing budgets table if needed
+    cursor.execute('PRAGMA table_info(budgets)')
+    cols = [row[1] for row in cursor.fetchall()]
+    if 'category' not in cols:
+        cursor.execute("ALTER TABLE budgets ADD COLUMN category TEXT")
+
+    # ── Milestone 2: investments table ──────────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS investments (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id          INTEGER NOT NULL,
+            investment_name  TEXT    NOT NULL,
+            investment_type  TEXT    NOT NULL,
+            purchase_price   REAL    NOT NULL,
+            current_price    REAL    NOT NULL,
+            quantity         REAL    NOT NULL,
+            purchase_date    DATE    NOT NULL,
+            broker           TEXT,
+            notes            TEXT,
+            created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_investments_type    ON investments(investment_type)')
+
+    # ── Milestone 2: financial_goals table ───────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS financial_goals (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER NOT NULL,
+            goal_name     TEXT    NOT NULL,
+            goal_type     TEXT    NOT NULL,
+            target_amount REAL    NOT NULL,
+            saved_amount  REAL    NOT NULL DEFAULT 0,
+            deadline      DATE    NOT NULL,
+            priority      TEXT    NOT NULL DEFAULT 'Medium',
+            status        TEXT    NOT NULL DEFAULT 'Active',
+            notes         TEXT,
+            created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_goals_user_id ON financial_goals(user_id)')
+
+    # ── Milestone 3: notifications table ─────────────────────────────────────
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            type       TEXT    NOT NULL,
+            title      TEXT    NOT NULL,
+            message    TEXT    NOT NULL,
+            is_read    INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_notifications_is_read  ON notifications(is_read)')
 
     conn.commit()
     conn.close()

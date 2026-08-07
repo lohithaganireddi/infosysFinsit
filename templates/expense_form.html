@@ -1,72 +1,98 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ page_title }} | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+{% block title %}Add Expense | FinSight – Personal Finance &amp; Investment Intelligence{% endblock %}
+{% block header_title %}{{ page_title }}{% endblock %}
+{% block header_description %}{{ page_description }}{% endblock %}
 
 {% block content %}
-<main class="error-page-container">
-  <div class="auth-card-container">
-    <div class="auth-card" style="max-width: 640px; width: 100%;">
-      <div class="secure-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        <span>Expenses module</span>
-      </div>
 
-      <div class="auth-card-header">
-        <h2>{{ page_title }}</h2>
-        <p>{{ page_description }}</p>
-      </div>
 
-      <form action="{{ form_action }}" method="POST" novalidate>
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="mock-card" style="max-width:720px;margin:0 auto;padding:28px 32px;border-radius:16px;">
 
-        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap: 16px;">
-          <div class="input-group">
-            <label for="category" class="input-label">Category</label>
-            <div class="input-wrapper">
-              <span class="input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
-              </span>
-              <select id="category" name="category" class="form-input" required>
-                <option value="" disabled {% if not expense.category %}selected{% endif %}>Select category</option>
-                {% for option in categories %}
-                  <option value="{{ option }}" {% if expense.category == option %}selected{% endif %}>{{ option }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="amount" class="input-label">Amount</label>
-            <div class="input-wrapper">
-              <span class="input-icon">{{ DEFAULT_CURRENCY }}</span>
-              <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-input" placeholder="0.00" value="{{ expense.amount or '' }}" required>
-            </div>
-          </div>
-
-          <div class="input-group" style="grid-column: span 2;">
-            <label for="description" class="input-label">Description</label>
-            <div class="input-wrapper">
-              <textarea id="description" name="description" class="form-input" rows="4" placeholder="Add a short note about this expense" style="padding-left:14px;">{{ expense.description or '' }}</textarea>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="expense_date" class="input-label">Expense Date</label>
-            <div class="input-wrapper">
-              <span class="input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              </span>
-              <input type="date" id="expense_date" name="expense_date" class="form-input" value="{{ expense.expense_date or '' }}" required>
-            </div>
-          </div>
+        <div class="secure-badge" style="margin-bottom:20px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Expense Module</span>
         </div>
 
-        <div class="form-utility-row" style="justify-content: flex-start; gap: 10px; margin-top: 18px;">
-          <button type="submit" class="btn btn-primary" style="min-width: 150px;">{{ submit_text }}</button>
-          <a href="{{ url_for('expenses') }}" class="btn btn-secondary" style="min-width: 150px;">Cancel</a>
-        </div>
-      </form>
-    </div>
-  </div>
-</main>
+        <form id="expenseForm" action="{{ form_action }}" method="POST" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:18px;">
+
+            <!-- Category -->
+            <div class="input-group">
+              <label for="category" class="input-label">Category <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </span>
+                <select id="category" name="category" class="form-input" required>
+                  <option value="" disabled {% if not expense.category %}selected{% endif %}>Select category</option>
+                  {% for option in categories %}
+                    <option value="{{ option }}" {% if expense.category == option %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <span class="field-error-msg" id="categoryError"></span>
+            </div>
+
+            <!-- Amount -->
+            <div class="input-group">
+              <label for="amount" class="input-label">Amount <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">{{ DEFAULT_CURRENCY }}</span>
+                <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-input"
+                       placeholder="0.00" value="{{ expense.amount or '' }}" required>
+              </div>
+              <span class="field-error-msg" id="amountError"></span>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="input-group">
+              <label for="payment_method" class="input-label">Payment Method <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                </span>
+                <select id="payment_method" name="payment_method" class="form-input" required>
+                  {% for method in payment_methods %}
+                    <option value="{{ method }}" {% if expense.payment_method == method %}selected{% endif %}>{{ method }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Expense Date -->
+            <div class="input-group">
+              <label for="expense_date" class="input-label">Expense Date <span style="color:#ef4444;">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </span>
+                <input type="date" id="expense_date" name="expense_date" class="form-input"
+                       value="{{ expense.expense_date or '' }}" required>
+              </div>
+              <span class="field-error-msg" id="dateError"></span>
+            </div>
+
+            <!-- Description (full width) -->
+            <div class="input-group" style="grid-column:span 2;">
+              <label for="description" class="input-label">Description <span style="color:var(--secondary-text);font-weight:400;">(optional)</span></label>
+              <div class="input-wrapper">
+                <textarea id="description" name="description" class="form-input" rows="3"
+                          placeholder="Add a short note about this expense…">{{ expense.description or '' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-utility-row" style="justify-content:flex-start;gap:12px;margin-top:22px;">
+            <button type="submit" class="btn btn-primary" style="min-width:160px;">
+              <span class="btn-text">{{ submit_text }}</span>
+              <div class="btn-spinner" style="display:none;"></div>
+            </button>
+            <a href="{{ url_for('expenses') }}" class="btn btn-secondary" style="min-width:120px;text-align:center;">Cancel</a>
+          </div>
+        </form>
+      </div>
+
 {% endblock %}

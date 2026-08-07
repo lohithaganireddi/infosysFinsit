@@ -1,208 +1,973 @@
 {% extends 'base.html' %}
 
 {% block title %}Expenses | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+{% block header_title %}Expenses{% endblock %}
+{% block header_description %}Track and manage all your financial transactions.{% endblock %}
+
+{% block header_action %}
+<div class="exp-header-actions">
+  <a href="{{ url_for('export_expenses_csv') }}?q={{ search }}&category={{ category }}&payment_method={{ payment_method }}&date_from={{ date_from }}&date_to={{ date_to }}&amount_min={{ amount_min }}&amount_max={{ amount_max }}&sort={{ sort }}"
+     class="exp-btn exp-btn-ghost" id="exportCsvBtn" title="Export current view as CSV">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Export
+  </a>
+  <a href="{{ url_for('create_expense') }}" class="exp-btn exp-btn-primary" id="addExpenseHeaderBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Add Expense
+  </a>
+</div>
+{% endblock %}
+
+{# ── Category Icon Macro (pure Jinja, no Python changes needed) ── #}
+{% macro cat_icon(cat) %}
+  {% set c = cat | lower %}
+  {% if c == 'food' %}🍽️
+  {% elif c == 'transport' %}🚗
+  {% elif c == 'bills' %}⚡
+  {% elif c == 'shopping' %}🛍️
+  {% elif c == 'entertainment' %}🎬
+  {% elif c == 'education' %}📚
+  {% elif c == 'healthcare' %}💊
+  {% elif c == 'investment' %}📈
+  {% elif c == 'travel' %}✈️
+  {% else %}💰
+  {% endif %}
+{% endmacro %}
+
+{% set has_filters = search or category or payment_method or date_from or date_to or amount_min or amount_max %}
 
 {% block content %}
-<div class="dashboard-layout">
-  <aside class="dash-sidebar">
-    <a href="{{ url_for('dashboard') }}" class="sidebar-logo">
-      <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-        <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- ══════════════════════════════════════════════════════
+     KPI SUMMARY CARDS
+══════════════════════════════════════════════════════ -->
+<div class="exp-kpi-grid">
+
+  <div class="exp-kpi-card" id="kpiTotalExpenses">
+    <div class="exp-kpi-icon exp-kpi-icon--red">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
       </svg>
-      <span class="logo-text">FinSight</span>
-    </a>
-
-    <ul class="sidebar-nav">
-      <li>
-        <a href="{{ url_for('dashboard') }}" class="nav-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      <li>
-        <a href="{{ url_for('expenses') }}" class="nav-link active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          <span>Expenses</span>
-        </a>
-      </li>
-      <li>
-        <a href="{{ url_for('budgets') }}" class="nav-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-          <span>Budget</span>
-        </a>
-      </li>
-    </ul>
-
-    <div class="sidebar-user">
-      <div class="user-avatar">
-        {% if user.profile_image %}
-          <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}">
-        {% else %}
-          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#12395F,#10B981);font-size:13px;font-weight:700;">{{ user.name[0].upper() }}</div>
-        {% endif %}
-      </div>
-      <div class="user-info">
-        <span class="user-name">{{ user.name }}</span>
-        <span class="user-status">● Active Session</span>
-      </div>
     </div>
-  </aside>
-
-  <div class="dash-main">
-    <header class="dash-header">
-      <div class="dash-header-title">
-        <h1>Expenses</h1>
-        <p>Manage your spending and keep every transaction tied to your account.</p>
-      </div>
-      <div class="dash-header-actions">
-        <a href="{{ url_for('create_expense') }}" class="btn btn-primary" style="width:auto;padding:8px 16px;">Add Expense</a>
-        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="btn-logout">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Logout
-          </button>
-        </form>
-      </div>
-    </header>
-
-    <div class="dash-content">
-      <div class="mock-card" style="padding: 18px; margin-bottom: 18px;">
-        <form method="GET" action="{{ url_for('expenses') }}" class="search-filter-row">
-          <div class="search-box">
-            <input type="text" name="q" class="form-input" placeholder="Search expenses" value="{{ search }}" autocomplete="off">
-          </div>
-          <div class="filter-box">
-            <select name="category" class="form-input">
-              <option value="">All categories</option>
-              {% for option in categories %}
-                <option value="{{ option }}" {% if category == option %}selected{% endif %}>{{ option }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="filter-box">
-            <select name="sort" class="form-input">
-              <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Sort: Newest first</option>
-              <option value="date_asc" {% if sort == 'date_asc' %}selected{% endif %}>Sort: Oldest first</option>
-              <option value="amount_desc" {% if sort == 'amount_desc' %}selected{% endif %}>Sort: Highest amount</option>
-              <option value="amount_asc" {% if sort == 'amount_asc' %}selected{% endif %}>Sort: Lowest amount</option>
-            </select>
-          </div>
-          <div class="filter-actions">
-            <button type="submit" class="btn btn-secondary btn-compact">Apply</button>
-            <a href="{{ url_for('expenses') }}" class="btn btn-compact btn-secondary" style="text-decoration:none;">Reset</a>
-          </div>
-        </form>
-      </div>
-
-      <div class="expense-summary-grid">
-        <div class="mock-card expense-summary-card" style="padding: 18px;">
-          <span class="mock-card-label">Total Expenses</span>
-          <div class="expense-summary-value">{{ format_currency(summary.total_expenses) }}</div>
-          <span class="expense-summary-meta">Across current results</span>
-        </div>
-        <div class="mock-card expense-summary-card" style="padding: 18px;">
-          <span class="mock-card-label">Total Transactions</span>
-          <div class="expense-summary-value">{{ summary.total_transactions }}</div>
-          <span class="expense-summary-meta">Matching entries</span>
-        </div>
-        <div class="mock-card expense-summary-card" style="padding: 18px;">
-          <span class="mock-card-label">Highest Expense</span>
-          <div class="expense-summary-value">{{ format_currency(summary.highest_expense) }}</div>
-          <span class="expense-summary-meta">Largest single transaction</span>
-        </div>
-        <div class="mock-card expense-summary-card" style="padding: 18px;">
-          <span class="mock-card-label">Average Expense</span>
-          <div class="expense-summary-value">{{ format_currency(summary.average_expense) }}</div>
-          <span class="expense-summary-meta">Per transaction</span>
-        </div>
-      </div>
-
-      <div class="mock-card" style="padding: 18px;">
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="col-date">Date</th>
-                <th class="col-category">Category</th>
-                <th class="col-description">Description</th>
-                <th class="col-amount">Amount</th>
-                <th class="col-actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if expenses %}
-                {% for expense in expenses %}
-                  <tr>
-                    <td class="td-date">{{ expense.expense_date }}</td>
-                    <td class="td-category">{{ expense.category }}</td>
-                    <td class="td-description">{{ expense.description or '—' }}</td>
-                    <td class="td-amount">{{ format_currency(expense.amount) }}</td>
-                    <td class="td-actions">
-                      <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="btn btn-primary btn-sm">Edit</a>
-                      <button type="button" class="btn btn-danger btn-sm"
-                        data-delete-id="{{ expense.id }}"
-                        data-delete-desc="{{ expense.description or expense.category }}"
-                        onclick="openDeleteModal(this)">Delete</button>
-                    </td>
-                  </tr>
-                {% endfor %}
-              {% else %}
-                <tr>
-                  <td colspan="5">
-                    <div style="text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                      <span style="font-size:14px;font-weight:600;color:var(--secondary-text);">No expenses found</span>
-                      <span style="font-size:12px;color:var(--secondary-text);opacity:0.6;">{% if search or category %}Try adjusting your filters.{% else %}Start tracking your spending.{% endif %}</span>
-                      {% if not search and not category %}
-                        <a href="{{ url_for('create_expense') }}" class="btn btn-primary" style="width:auto;padding:8px 18px;margin-top:4px;">Add Your First Expense</a>
-                      {% endif %}
-                    </div>
-                  </td>
-                </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Total Expenses</span>
+      <span class="exp-kpi-value">{{ format_currency(summary.total_expenses) }}</span>
+      <span class="exp-kpi-meta">Across current results</span>
     </div>
+    <svg class="exp-kpi-sparkline" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,28 14,20 28,24 40,10 54,16 68,6 80,12" fill="none" stroke="rgba(239,68,68,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   </div>
+
+  <div class="exp-kpi-card" id="kpiHighest">
+    <div class="exp-kpi-icon exp-kpi-icon--amber">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+      </svg>
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Highest Expense</span>
+      <span class="exp-kpi-value">{{ format_currency(summary.highest_expense) }}</span>
+      <span class="exp-kpi-meta">Largest single transaction</span>
+    </div>
+    <svg class="exp-kpi-sparkline" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,24 14,18 28,22 40,8 54,14 68,4 80,10" fill="none" stroke="rgba(245,158,11,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="exp-kpi-card" id="kpiTransactions">
+    <div class="exp-kpi-icon exp-kpi-icon--blue">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Transactions</span>
+      <span class="exp-kpi-value">{{ summary.total_transactions }}</span>
+      <span class="exp-kpi-meta">Matching entries</span>
+    </div>
+    <svg class="exp-kpi-sparkline" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,20 14,16 28,20 40,8 54,14 68,4 80,10" fill="none" stroke="rgba(99,102,241,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="exp-kpi-card" id="kpiAverage">
+    <div class="exp-kpi-icon exp-kpi-icon--emerald">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Average per Entry</span>
+      <span class="exp-kpi-value">{{ format_currency(summary.average_expense) }}</span>
+      <span class="exp-kpi-meta">Mean transaction value</span>
+    </div>
+    <svg class="exp-kpi-sparkline" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,26 14,20 28,22 40,16 54,18 68,10 80,14" fill="none" stroke="rgba(16,185,129,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
-  <div style="background:#0d2540;border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:28px 28px 24px;max-width:380px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-      <div style="width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+
+<!-- ══════════════════════════════════════════════════════
+     FILTER PANEL
+══════════════════════════════════════════════════════ -->
+<div class="exp-filter-panel" id="expFilterPanel">
+  <form method="GET" action="{{ url_for('expenses') }}" id="filterForm">
+
+    <!-- Row 1: Search + Selects -->
+    <div class="exp-filter-row exp-filter-row--primary">
+
+      <div class="exp-search-wrap">
+        <svg class="exp-search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" name="q" id="expSearchInput" class="exp-search-input"
+               placeholder="Search expenses, categories, descriptions…"
+               value="{{ search }}" autocomplete="off">
+        {% if search %}
+        <button type="button" class="exp-search-clear" title="Clear search"
+                onclick="document.getElementById('expSearchInput').value='';document.getElementById('filterForm').submit();">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+
+      <div class="exp-filter-group">
+        <label class="exp-filter-label" for="filterCategory">Category</label>
+        <div class="exp-pill-select-wrap">
+          <select name="category" id="filterCategory" class="exp-pill-select" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for option in categories %}
+              <option value="{{ option }}" {% if category == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+          <svg class="exp-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <div class="exp-filter-group">
+        <label class="exp-filter-label" for="filterPayment">Payment</label>
+        <div class="exp-pill-select-wrap">
+          <select name="payment_method" id="filterPayment" class="exp-pill-select" onchange="this.form.submit()">
+            <option value="">All Methods</option>
+            {% for method in payment_methods %}
+              <option value="{{ method }}" {% if payment_method == method %}selected{% endif %}>{{ method }}</option>
+            {% endfor %}
+          </select>
+          <svg class="exp-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <div class="exp-filter-group">
+        <label class="exp-filter-label" for="filterSort">Sort By</label>
+        <div class="exp-pill-select-wrap">
+          <select name="sort" id="filterSort" class="exp-pill-select" onchange="this.form.submit()">
+            <option value="date_desc"   {% if sort == 'date_desc'   %}selected{% endif %}>Newest First</option>
+            <option value="date_asc"    {% if sort == 'date_asc'    %}selected{% endif %}>Oldest First</option>
+            <option value="amount_desc" {% if sort == 'amount_desc' %}selected{% endif %}>Highest Amount</option>
+            <option value="amount_asc"  {% if sort == 'amount_asc'  %}selected{% endif %}>Lowest Amount</option>
+          </select>
+          <svg class="exp-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 2: Date + Amount + Actions -->
+    <div class="exp-filter-row exp-filter-row--secondary">
+
+      <div class="exp-date-range">
+        <div class="exp-date-field">
+          <label class="exp-filter-label" for="filterDateFrom">From</label>
+          <input type="date" name="date_from" id="filterDateFrom" class="exp-date-input" value="{{ date_from }}">
+        </div>
+        <span class="exp-date-sep">—</span>
+        <div class="exp-date-field">
+          <label class="exp-filter-label" for="filterDateTo">To</label>
+          <input type="date" name="date_to" id="filterDateTo" class="exp-date-input" value="{{ date_to }}">
+        </div>
+      </div>
+
+      <div class="exp-amount-range">
+        <div class="exp-amount-field">
+          <label class="exp-filter-label" for="filterAmtMin">Min Amount</label>
+          <div class="exp-amount-wrap">
+            <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
+            <input type="number" name="amount_min" id="filterAmtMin" class="exp-amount-input" placeholder="0" value="{{ amount_min }}" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="exp-amount-field">
+          <label class="exp-filter-label" for="filterAmtMax">Max Amount</label>
+          <div class="exp-amount-wrap">
+            <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
+            <input type="number" name="amount_max" id="filterAmtMax" class="exp-amount-input" placeholder="∞" value="{{ amount_max }}" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-filter-actions">
+        <button type="submit" class="exp-btn exp-btn-accent" id="applyFiltersBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Apply
+        </button>
+        <a href="{{ url_for('expenses') }}" class="exp-btn exp-btn-ghost" id="resetFiltersBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.86"/></svg>
+          Reset
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Active Filter Chips -->
+    {% if has_filters %}
+    <div class="exp-active-chips">
+      <span class="exp-chips-label">Active:</span>
+      {% if search %}
+        <span class="exp-chip">
+          Search: "{{ search }}"
+          <a href="{{ url_for('expenses', category=category, payment_method=payment_method, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-chip-x" aria-label="Remove search filter">×</a>
+        </span>
+      {% endif %}
+      {% if category %}
+        <span class="exp-chip">
+          {{ category }}
+          <a href="{{ url_for('expenses', q=search, payment_method=payment_method, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-chip-x" aria-label="Remove category filter">×</a>
+        </span>
+      {% endif %}
+      {% if payment_method %}
+        <span class="exp-chip">
+          {{ payment_method }}
+          <a href="{{ url_for('expenses', q=search, category=category, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-chip-x" aria-label="Remove payment filter">×</a>
+        </span>
+      {% endif %}
+      {% if date_from or date_to %}
+        <span class="exp-chip">
+          {{ date_from or '…' }} → {{ date_to or '…' }}
+          <a href="{{ url_for('expenses', q=search, category=category, payment_method=payment_method, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-chip-x" aria-label="Remove date filter">×</a>
+        </span>
+      {% endif %}
+      {% if amount_min or amount_max %}
+        <span class="exp-chip">
+          {{ DEFAULT_CURRENCY }}{{ amount_min or '0' }} – {{ DEFAULT_CURRENCY }}{{ amount_max or '∞' }}
+          <a href="{{ url_for('expenses', q=search, category=category, payment_method=payment_method, date_from=date_from, date_to=date_to, sort=sort) }}" class="exp-chip-x" aria-label="Remove amount filter">×</a>
+        </span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </form>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     EXPENSE TABLE CARD
+══════════════════════════════════════════════════════ -->
+<div class="exp-table-card" id="expTableCard">
+
+  <!-- Table header bar -->
+  <div class="exp-table-topbar">
+    <div class="exp-table-meta">
+      <h2 class="exp-table-title">Transactions</h2>
+      <span class="exp-count-pill">{{ summary.total_transactions }} entries</span>
+    </div>
+    <button class="exp-toolbar-pill" id="toggleFiltersBtn" onclick="toggleFilterPanel()" title="Toggle filter panel">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filters
+      {% if has_filters %}<span class="exp-dot-indicator"></span>{% endif %}
+    </button>
+  </div>
+
+  {% if expenses %}
+  <div class="exp-table-scroll">
+    <table class="exp-table" id="expensesTable" role="table">
+      <thead>
+        <tr class="exp-thead-row">
+          <th class="exp-th">Category</th>
+          <th class="exp-th">Description</th>
+          <th class="exp-th exp-th--hide-md">Payment</th>
+          <th class="exp-th">Date</th>
+          <th class="exp-th exp-th--right">Amount</th>
+          <th class="exp-th exp-th--center">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="expensesTableBody">
+        {% for expense in expenses %}
+        <tr class="exp-row" id="exp-row-{{ expense.id }}" tabindex="0">
+
+          <!-- Category -->
+          <td class="exp-td">
+            <div class="exp-cat-cell">
+              <span class="exp-cat-icon exp-cat--{{ expense.category | lower | replace(' ', '-') }}">
+                {{ cat_icon(expense.category) }}
+              </span>
+              <span class="exp-badge exp-badge--{{ expense.category | lower | replace(' ', '-') }}">{{ expense.category }}</span>
+            </div>
+          </td>
+
+          <!-- Description -->
+          <td class="exp-td">
+            <span class="exp-desc">{{ expense.description or '—' }}</span>
+          </td>
+
+          <!-- Payment Method -->
+          <td class="exp-td exp-td--hide-md">
+            <span class="exp-pay-pill">
+              <span class="exp-pay-dot"></span>
+              {{ expense.payment_method or 'Cash' }}
+            </span>
+          </td>
+
+          <!-- Date -->
+          <td class="exp-td">
+            <span class="exp-date-val">{{ expense.expense_date | format_date if expense.expense_date else '—' }}</span>
+          </td>
+
+          <!-- Amount -->
+          <td class="exp-td exp-td--right">
+            <span class="exp-amount-neg">−{{ format_currency(expense.amount) }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="exp-td exp-td--center">
+            <div class="exp-menu-wrap">
+              <button class="exp-dots" onclick="toggleActionMenu(this, {{ expense.id }})"
+                      title="More actions" aria-haspopup="true" aria-label="Actions for {{ expense.description or expense.category }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
+              <div class="exp-dropdown" id="actionMenu-{{ expense.id }}" role="menu">
+                <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="exp-dd-item exp-dd-edit" role="menuitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </a>
+                <button class="exp-dd-item exp-dd-delete"
+                        data-delete-id="{{ expense.id }}"
+                        data-delete-desc="{{ expense.description or expense.category }}"
+                        onclick="openDeleteModal(this)"
+                        role="menuitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="exp-empty" id="expEmptyState">
+    <div class="exp-empty-icon-wrap">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(16,185,129,0.5)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+    </div>
+    <h3 class="exp-empty-title">
+      {% if has_filters %}No expenses match your filters{% else %}No expenses recorded yet{% endif %}
+    </h3>
+    <p class="exp-empty-sub">
+      {% if has_filters %}
+        Try adjusting filters or <a href="{{ url_for('expenses') }}" class="exp-empty-link">clear all</a>.
+      {% else %}
+        Start tracking your spending to gain powerful financial insights.
+      {% endif %}
+    </p>
+    {% if not has_filters %}
+    <a href="{{ url_for('create_expense') }}" class="exp-btn exp-btn-primary exp-btn--lg" id="addFirstExpenseBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Your First Expense
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     PAGINATION
+══════════════════════════════════════════════════════ -->
+{% if pagination and pagination.pages > 1 %}
+<nav class="exp-pagination" id="expPagination" aria-label="Expense pagination">
+  {% if pagination.has_prev %}
+  <a href="{{ url_for('expenses', page=pagination.prev_num, q=search, category=category, payment_method=payment_method, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-pg-btn" aria-label="Previous page">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Prev
+  </a>
+  {% else %}
+  <span class="exp-pg-btn exp-pg-btn--off" aria-disabled="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg> Prev
+  </span>
+  {% endif %}
+
+  <div class="exp-pg-nums">
+    {% for p in range(1, pagination.pages + 1) %}
+      {% if p == pagination.page %}
+        <span class="exp-pg-n exp-pg-n--active" aria-current="page">{{ p }}</span>
+      {% elif p == 1 or p == pagination.pages or (p >= pagination.page - 2 and p <= pagination.page + 2) %}
+        <a href="{{ url_for('expenses', page=p, q=search, category=category, payment_method=payment_method, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-pg-n">{{ p }}</a>
+      {% elif p == pagination.page - 3 or p == pagination.page + 3 %}
+        <span class="exp-pg-ellip">…</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if pagination.has_next %}
+  <a href="{{ url_for('expenses', page=pagination.next_num, q=search, category=category, payment_method=payment_method, date_from=date_from, date_to=date_to, amount_min=amount_min, amount_max=amount_max, sort=sort) }}" class="exp-pg-btn" aria-label="Next page">
+    Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </a>
+  {% else %}
+  <span class="exp-pg-btn exp-pg-btn--off" aria-disabled="true">
+    Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </span>
+  {% endif %}
+</nav>
+{% endif %}
+
+
+<!-- ══════════════════════════════════════════════════════
+     DELETE MODAL
+══════════════════════════════════════════════════════ -->
+<div id="deleteModal" class="exp-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="deleteModalHeading">
+  <div class="exp-modal">
+    <div class="exp-modal-head">
+      <div class="exp-modal-badge">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
       </div>
       <div>
-        <div style="font-size:15px;font-weight:700;color:#fff;">Delete Expense</div>
-        <div style="font-size:12px;color:var(--secondary-text);opacity:0.7;margin-top:2px;">This action cannot be undone.</div>
+        <p id="deleteModalHeading" class="exp-modal-heading">Delete Expense</p>
+        <p class="exp-modal-hint">This action cannot be undone.</p>
       </div>
+      <button class="exp-modal-x" onclick="closeDeleteModal()" aria-label="Close">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <p id="deleteModalDesc" style="font-size:13px;color:var(--secondary-text);margin-bottom:22px;line-height:1.5;"></p>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="closeDeleteModal()" class="btn btn-secondary" style="width:auto;padding:9px 18px;margin:0;">Cancel</button>
+    <p id="deleteModalDesc" class="exp-modal-body"></p>
+    <div class="exp-modal-foot">
+      <button onclick="closeDeleteModal()" class="exp-btn exp-btn-ghost" id="deleteModalCancelBtn">Cancel</button>
       <form id="deleteModalForm" method="POST" style="margin:0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="btn btn-danger" style="width:auto;padding:9px 18px;margin:0;">Delete</button>
+        <button type="submit" class="exp-btn exp-btn-danger" id="deleteModalConfirmBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Delete Expense
+        </button>
       </form>
     </div>
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE STYLES
+══════════════════════════════════════════════════════ -->
+<style>
+/* ── Animations ─────────────────────────────── */
+@keyframes expFadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes dropdownIn {
+  from { opacity:0; transform:translateY(-6px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes modalIn {
+  from { opacity:0; transform:translateY(-14px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* ── Header actions ──────────────────────────── */
+.exp-header-actions { display:flex; align-items:center; gap:10px; }
+
+/* ── Shared button system ────────────────────── */
+.exp-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px; border-radius:10px;
+  font-size:13px; font-weight:600; font-family:var(--font-family);
+  text-decoration:none; cursor:pointer; border:none;
+  transition:all 0.18s ease; white-space:nowrap;
+  position:relative; overflow:hidden; letter-spacing:0.01em;
+}
+.exp-btn:active { transform:scale(0.97); }
+.exp-btn--lg { padding:12px 26px; font-size:14px; border-radius:12px; }
+
+.exp-btn-primary {
+  background:linear-gradient(135deg,#10B981,#059669);
+  color:#fff; box-shadow:0 4px 14px rgba(16,185,129,0.35);
+}
+.exp-btn-primary:hover { box-shadow:0 6px 22px rgba(16,185,129,0.5); transform:translateY(-1px); }
+
+.exp-btn-ghost {
+  background:rgba(255,255,255,0.05); color:var(--secondary-text);
+  border:1px solid rgba(255,255,255,0.1);
+}
+.exp-btn-ghost:hover { background:rgba(255,255,255,0.1); color:#fff; }
+
+.exp-btn-accent {
+  background:rgba(16,185,129,0.12); color:#10B981;
+  border:1px solid rgba(16,185,129,0.25);
+}
+.exp-btn-accent:hover { background:rgba(16,185,129,0.22); }
+
+.exp-btn-danger {
+  background:linear-gradient(135deg,#EF4444,#DC2626);
+  color:#fff; box-shadow:0 4px 14px rgba(239,68,68,0.3);
+}
+.exp-btn-danger:hover { box-shadow:0 6px 20px rgba(239,68,68,0.45); transform:translateY(-1px); }
+
+
+/* ── KPI Cards ───────────────────────────────── */
+.exp-kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:16px; margin-bottom:20px;
+  animation:expFadeUp 0.4s ease both;
+}
+.exp-kpi-card {
+  position:relative; overflow:hidden;
+  background:rgba(14,32,51,0.75);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:20px;
+  display:flex; gap:14px; align-items:flex-start;
+  transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor:default;
+}
+.exp-kpi-card:hover {
+  transform:translateY(-3px);
+  box-shadow:0 14px 36px rgba(0,0,0,0.4);
+  border-color:rgba(255,255,255,0.14);
+}
+.exp-kpi-icon {
+  width:42px; height:42px; border-radius:11px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.exp-kpi-icon--red     { background:rgba(239,68,68,0.12); color:#F87171; border:1px solid rgba(239,68,68,0.2); }
+.exp-kpi-icon--emerald { background:rgba(16,185,129,0.12); color:#34D399; border:1px solid rgba(16,185,129,0.2); }
+.exp-kpi-icon--blue    { background:rgba(99,102,241,0.12); color:#818CF8; border:1px solid rgba(99,102,241,0.2); }
+.exp-kpi-icon--amber   { background:rgba(245,158,11,0.12); color:#FCD34D; border:1px solid rgba(245,158,11,0.2); }
+.exp-kpi-body { flex:1; min-width:0; }
+.exp-kpi-label {
+  display:block; font-size:10.5px; font-weight:600;
+  color:var(--secondary-text); text-transform:uppercase;
+  letter-spacing:0.07em; margin-bottom:5px; opacity:0.65;
+}
+.exp-kpi-value {
+  display:block; font-size:22px; font-weight:700; color:#fff;
+  line-height:1.1; margin-bottom:5px; letter-spacing:-0.02em;
+}
+.exp-kpi-meta { display:block; font-size:11px; color:var(--secondary-text); opacity:0.55; }
+.exp-kpi-sparkline {
+  position:absolute; bottom:12px; right:14px;
+  width:80px; height:30px; opacity:0.55; pointer-events:none;
+}
+
+
+/* ── Filter Panel ────────────────────────────── */
+.exp-filter-panel {
+  background:rgba(14,32,51,0.7);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:16px; padding:20px;
+  margin-bottom:20px; backdrop-filter:blur(12px);
+  animation:expFadeUp 0.45s ease 0.05s both;
+}
+.exp-filter-row { display:flex; align-items:flex-end; gap:14px; }
+.exp-filter-row--primary  { margin-bottom:14px; }
+.exp-filter-row--secondary { flex-wrap:wrap; }
+.exp-filter-label {
+  display:block; font-size:10px; font-weight:600;
+  color:rgba(255,255,255,0.4); text-transform:uppercase;
+  letter-spacing:0.08em; margin-bottom:6px;
+}
+
+/* Search */
+.exp-search-wrap { position:relative; flex:1; min-width:220px; }
+.exp-search-ico {
+  position:absolute; left:12px; top:50%;
+  transform:translateY(-50%); color:rgba(255,255,255,0.3); pointer-events:none;
+}
+.exp-search-input {
+  width:100%; height:40px; padding:0 36px 0 38px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px; color:#fff; font-size:13px;
+  font-family:var(--font-family); transition:border-color 0.18s, box-shadow 0.18s; outline:none;
+}
+.exp-search-input::placeholder { color:rgba(255,255,255,0.28); }
+.exp-search-input:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+.exp-search-clear {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  background:rgba(255,255,255,0.08); border:none; border-radius:50%;
+  width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:rgba(255,255,255,0.45); transition:all 0.15s;
+}
+.exp-search-clear:hover { background:rgba(255,255,255,0.16); color:#fff; }
+
+/* Selects */
+.exp-filter-group { display:flex; flex-direction:column; }
+.exp-pill-select-wrap { position:relative; display:inline-flex; align-items:center; }
+.exp-pill-select {
+  height:40px; padding:0 34px 0 13px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px; color:#fff; font-size:13px;
+  font-family:var(--font-family);
+  appearance:none; -webkit-appearance:none;
+  cursor:pointer; outline:none; min-width:138px;
+  transition:border-color 0.18s, box-shadow 0.18s;
+}
+.exp-pill-select option { background:#0d2540; color:#fff; }
+.exp-pill-select:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+.exp-select-caret {
+  position:absolute; right:10px; color:rgba(255,255,255,0.32); pointer-events:none;
+}
+
+/* Date range */
+.exp-date-range { display:flex; align-items:flex-end; gap:8px; }
+.exp-date-field  { display:flex; flex-direction:column; }
+.exp-date-sep    { color:rgba(255,255,255,0.2); font-size:16px; padding-bottom:10px; }
+.exp-date-input  {
+  height:40px; padding:0 12px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px; color:#fff; font-size:13px;
+  font-family:var(--font-family); outline:none; min-width:130px;
+  transition:border-color 0.18s;
+}
+.exp-date-input:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+
+/* Amount range */
+.exp-amount-range { display:flex; align-items:flex-end; gap:10px; }
+.exp-amount-field { display:flex; flex-direction:column; }
+.exp-amount-wrap  { position:relative; display:inline-flex; align-items:center; }
+.exp-currency-sym { position:absolute; left:12px; font-size:12px; color:rgba(255,255,255,0.32); pointer-events:none; }
+.exp-amount-input {
+  height:40px; padding:0 12px 0 28px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px; color:#fff; font-size:13px;
+  font-family:var(--font-family); outline:none; min-width:118px;
+  transition:border-color 0.18s;
+}
+.exp-amount-input::placeholder { color:rgba(255,255,255,0.22); }
+.exp-amount-input:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+
+/* Actions */
+.exp-filter-actions { display:flex; align-items:flex-end; gap:8px; margin-left:auto; }
+
+/* Active chips */
+.exp-active-chips {
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+  margin-top:14px; padding-top:14px;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+.exp-chips-label { font-size:10.5px; color:rgba(255,255,255,0.35); font-weight:600; letter-spacing:0.04em; }
+.exp-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 10px;
+  background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);
+  border-radius:99px; font-size:11px; color:#34D399; font-weight:500;
+}
+.exp-chip-x {
+  color:rgba(52,211,153,0.6); text-decoration:none; font-weight:700; font-size:14px; line-height:1;
+}
+.exp-chip-x:hover { color:#F87171; }
+
+
+/* ── Table Card ──────────────────────────────── */
+.exp-table-card {
+  background:rgba(14,32,51,0.75);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px; overflow:hidden;
+  margin-bottom:20px;
+  animation:expFadeUp 0.5s ease 0.1s both;
+}
+.exp-table-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 24px 15px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.exp-table-meta  { display:flex; align-items:baseline; gap:10px; }
+.exp-table-title { font-size:16px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+.exp-count-pill  {
+  font-size:11.5px; color:rgba(255,255,255,0.35); font-weight:500;
+  background:rgba(255,255,255,0.06); padding:2px 10px; border-radius:99px;
+}
+.exp-toolbar-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:9px; color:rgba(255,255,255,0.5);
+  font-size:12px; font-weight:600; cursor:pointer;
+  font-family:var(--font-family); transition:all 0.15s;
+  position:relative;
+}
+.exp-toolbar-pill:hover { background:rgba(255,255,255,0.1); color:#fff; }
+.exp-dot-indicator {
+  width:6px; height:6px; border-radius:50%; background:#10B981;
+  position:absolute; top:5px; right:5px;
+}
+
+/* Table */
+.exp-table-scroll {
+  /* No overflow constraint — table expands naturally */
+  /* Horizontal overflow allowed on very small screens only (handled at breakpoint) */
+  overflow-x:clip;
+}
+.exp-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.exp-thead-row { position:sticky; top:0; z-index:2; }
+.exp-th {
+  padding:12px 16px 11px; text-align:left;
+  font-size:10.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.07em; color:rgba(255,255,255,0.38);
+  background:rgba(8,26,47,0.95);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  white-space:nowrap;
+}
+.exp-th--right  { text-align:right; }
+.exp-th--center { text-align:center; width:72px; }
+
+.exp-row {
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  transition:background 0.15s ease;
+  outline:none;
+}
+.exp-row:last-child { border-bottom:none; }
+.exp-row:hover { background:rgba(255,255,255,0.028); }
+.exp-row:focus-visible { background:rgba(16,185,129,0.04); outline:2px solid rgba(16,185,129,0.3); outline-offset:-2px; }
+
+.exp-td { padding:14px 16px; vertical-align:middle; color:var(--secondary-text); }
+.exp-td--right  { text-align:right; }
+.exp-td--center { text-align:center; }
+.exp-td--hide-md { }
+
+/* Category cell */
+.exp-cat-cell { display:flex; align-items:center; gap:10px; }
+.exp-cat-icon {
+  width:32px; height:32px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+/* Category icon tints */
+.exp-cat--food          { background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.18); }
+.exp-cat--transport     { background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.18); }
+.exp-cat--bills         { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.18); }
+.exp-cat--shopping      { background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.18); }
+.exp-cat--entertainment { background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.18); }
+.exp-cat--education     { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.18); }
+.exp-cat--healthcare    { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.18); }
+.exp-cat--investment    { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.18); }
+.exp-cat--travel        { background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.18); }
+.exp-cat--other         { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); }
+
+/* Category badges */
+.exp-badge {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:99px;
+  font-size:11.5px; font-weight:600; letter-spacing:0.01em; white-space:nowrap;
+}
+.exp-badge--food          { background:rgba(249,115,22,0.1); color:#FB923C; }
+.exp-badge--transport     { background:rgba(59,130,246,0.1); color:#60A5FA; }
+.exp-badge--bills         { background:rgba(245,158,11,0.1); color:#FCD34D; }
+.exp-badge--shopping      { background:rgba(168,85,247,0.1); color:#C084FC; }
+.exp-badge--entertainment { background:rgba(236,72,153,0.1); color:#F472B6; }
+.exp-badge--education     { background:rgba(99,102,241,0.1); color:#818CF8; }
+.exp-badge--healthcare    { background:rgba(16,185,129,0.1); color:#34D399; }
+.exp-badge--investment    { background:rgba(16,185,129,0.1); color:#6EE7B7; }
+.exp-badge--travel        { background:rgba(14,165,233,0.1); color:#38BDF8; }
+.exp-badge--other         { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.45); }
+
+/* Description */
+.exp-desc {
+  color:rgba(255,255,255,0.78); font-weight:500; font-size:13px;
+  max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;
+}
+
+/* Payment */
+.exp-pay-pill {
+  display:inline-flex; align-items:center; gap:6px; padding:4px 10px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:99px; font-size:11.5px; font-weight:500;
+  color:rgba(255,255,255,0.55); white-space:nowrap;
+}
+.exp-pay-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.28); }
+
+/* Date */
+.exp-date-val { font-size:13px; font-weight:500; color:rgba(255,255,255,0.62); white-space:nowrap; }
+
+/* Amount */
+.exp-amount-neg {
+  font-size:14px; font-weight:700; color:#F87171;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+
+/* Three-dot menu */
+.exp-menu-wrap { position:relative; display:flex; justify-content:center; }
+.exp-dots {
+  width:32px; height:32px; border-radius:8px;
+  background:transparent; border:1px solid transparent;
+  color:rgba(255,255,255,0.28); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.exp-dots:hover { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.1); color:#fff; }
+
+.exp-dropdown {
+  display:none; position:absolute; top:calc(100% + 5px); right:0;
+  min-width:150px; background:#0d2540;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px; box-shadow:0 16px 40px rgba(0,0,0,0.55);
+  z-index:100; overflow:hidden;
+  animation:dropdownIn 0.15s ease;
+}
+.exp-dropdown.open { display:block; }
+
+.exp-dd-item {
+  display:flex; align-items:center; gap:10px; padding:11px 15px;
+  font-size:13px; font-weight:500; cursor:pointer; transition:background 0.12s;
+  text-decoration:none; font-family:var(--font-family);
+  width:100%; border:none; background:transparent; text-align:left;
+}
+.exp-dd-edit   { color:rgba(255,255,255,0.78); }
+.exp-dd-delete { color:#F87171; }
+.exp-dd-item:hover { background:rgba(255,255,255,0.06); }
+.exp-dd-delete:hover { background:rgba(239,68,68,0.08); }
+
+
+/* ── Empty State ─────────────────────────────── */
+.exp-empty {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:80px 24px 90px; gap:18px;
+}
+.exp-empty-icon-wrap {
+  width:88px; height:88px; border-radius:22px;
+  background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.13);
+  display:flex; align-items:center; justify-content:center;
+}
+.exp-empty-title { font-size:19px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+.exp-empty-sub { font-size:14px; color:rgba(255,255,255,0.42); max-width:320px; line-height:1.65; }
+.exp-empty-link { color:#10B981; text-decoration:none; font-weight:600; }
+.exp-empty-link:hover { text-decoration:underline; }
+
+
+/* ── Pagination ──────────────────────────────── */
+.exp-pagination {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  margin-bottom:24px;
+  animation:expFadeUp 0.5s ease 0.15s both;
+}
+.exp-pg-btn {
+  display:inline-flex; align-items:center; gap:5px; padding:8px 16px;
+  border-radius:10px; font-size:13px; font-weight:600; text-decoration:none;
+  background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.08); transition:all 0.15s;
+}
+.exp-pg-btn:hover:not(.exp-pg-btn--off) { background:rgba(255,255,255,0.1); color:#fff; }
+.exp-pg-btn--off { opacity:0.32; cursor:not-allowed; pointer-events:none; }
+.exp-pg-nums { display:flex; align-items:center; gap:4px; }
+.exp-pg-n {
+  width:36px; height:36px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:600; text-decoration:none;
+  color:rgba(255,255,255,0.48); background:transparent;
+  border:1px solid transparent; transition:all 0.15s; cursor:pointer;
+}
+.exp-pg-n:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.exp-pg-n--active { background:rgba(16,185,129,0.15); color:#10B981; border-color:rgba(16,185,129,0.3); }
+.exp-pg-ellip { color:rgba(255,255,255,0.25); font-size:14px; padding:0 4px; }
+
+
+/* ── Delete Modal ────────────────────────────── */
+.exp-overlay {
+  position:fixed; inset:0; z-index:1000;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);
+}
+.exp-modal {
+  background:linear-gradient(145deg,#0d2540,#0a1e35);
+  border:1px solid rgba(239,68,68,0.22);
+  border-radius:20px; padding:28px;
+  max-width:420px; width:90%;
+  box-shadow:0 32px 80px rgba(0,0,0,0.65);
+  animation:modalIn 0.2s ease;
+}
+.exp-modal-head {
+  display:flex; align-items:center; gap:14px; margin-bottom:18px;
+}
+.exp-modal-badge {
+  width:46px; height:46px; border-radius:13px; flex-shrink:0;
+  background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);
+  display:flex; align-items:center; justify-content:center;
+}
+.exp-modal-heading { font-size:16px; font-weight:700; color:#fff; }
+.exp-modal-hint    { font-size:12px; color:rgba(255,255,255,0.38); margin-top:2px; }
+.exp-modal-x {
+  margin-left:auto; background:rgba(255,255,255,0.06); border:none;
+  border-radius:8px; width:30px; height:30px;
+  display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,0.4); cursor:pointer; transition:all 0.15s;
+}
+.exp-modal-x:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.exp-modal-body {
+  font-size:13.5px; color:rgba(255,255,255,0.52); line-height:1.65; margin-bottom:24px;
+}
+.exp-modal-foot { display:flex; gap:10px; justify-content:flex-end; }
+
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width:1100px) {
+  .exp-kpi-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:820px) {
+  .exp-filter-row { flex-wrap:wrap; }
+  .exp-search-wrap { min-width:100%; order:-1; }
+  .exp-filter-row--secondary { flex-direction:column; align-items:stretch; }
+  .exp-filter-actions { justify-content:flex-end; }
+  .exp-th--hide-md, .exp-td--hide-md { display:none; }
+}
+@media (max-width:640px) {
+  .exp-kpi-grid { grid-template-columns:1fr 1fr; }
+  .exp-kpi-value { font-size:18px; }
+  .exp-kpi-sparkline { display:none; }
+  .exp-desc { max-width:150px; }
+  /* Allow horizontal table scroll on phones only — no vertical trap */
+  .exp-table-scroll { overflow-x:auto; }
+  .exp-table { min-width:540px; }
+}
+@media (max-width:440px) {
+  .exp-kpi-grid { grid-template-columns:1fr; }
+  .exp-header-actions .exp-btn-ghost { display:none; }
+}
+</style>
+
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
 <script>
+/* ── Delete Modal ─────────────────────────── */
 function openDeleteModal(btn) {
-  var id = btn.getAttribute('data-delete-id');
-  var desc = btn.getAttribute('data-delete-desc');
-  document.getElementById('deleteModalDesc').textContent = 'Are you sure you want to delete "' + desc + '"?';
+  const id   = btn.getAttribute('data-delete-id');
+  const desc = btn.getAttribute('data-delete-desc');
+  document.getElementById('deleteModalDesc').textContent =
+    'Are you sure you want to permanently delete "' + desc + '"? This cannot be undone.';
   document.getElementById('deleteModalForm').action = '/expenses/' + id + '/delete';
-  var modal = document.getElementById('deleteModal');
+  const modal = document.getElementById('deleteModal');
   modal.style.display = 'flex';
+  closeAllDropdowns();
 }
 function closeDeleteModal() {
   document.getElementById('deleteModal').style.display = 'none';
@@ -210,8 +975,52 @@ function closeDeleteModal() {
 document.getElementById('deleteModal').addEventListener('click', function(e) {
   if (e.target === this) closeDeleteModal();
 });
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeDeleteModal();
+
+/* ── Action Dropdowns ─────────────────────── */
+function closeAllDropdowns() {
+  document.querySelectorAll('.exp-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+function toggleActionMenu(btn, id) {
+  const menu   = document.getElementById('actionMenu-' + id);
+  const isOpen = menu.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) menu.classList.add('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.exp-menu-wrap')) closeAllDropdowns();
 });
+
+/* ── Keyboard ─────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeDeleteModal();
+    closeAllDropdowns();
+  }
+  // Ctrl/Cmd+F → focus search
+  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+    const s = document.getElementById('expSearchInput');
+    if (s) { e.preventDefault(); s.focus(); s.select(); }
+  }
+});
+
+/* ── Filter panel toggle ──────────────────── */
+function toggleFilterPanel() {
+  const panel = document.getElementById('expFilterPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── Live search debounce ─────────────────── */
+(function() {
+  const inp = document.getElementById('expSearchInput');
+  if (!inp) return;
+  let t;
+  inp.addEventListener('input', function() {
+    clearTimeout(t);
+    t = setTimeout(function() {
+      document.getElementById('filterForm').submit();
+    }, 480);
+  });
+})();
 </script>
+
 {% endblock %}

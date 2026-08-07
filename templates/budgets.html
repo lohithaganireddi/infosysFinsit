@@ -1,193 +1,991 @@
 {% extends 'base.html' %}
 
 {% block title %}Budgets | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+{% block header_title %}Budgets{% endblock %}
+{% block header_description %}Plan and monitor your monthly spending goals.{% endblock %}
+
+{% block header_action %}
+<div class="bgt-header-actions">
+  <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-primary" id="createBudgetHeaderBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Create Budget
+  </a>
+</div>
+{% endblock %}
+
+{# ── Category Icon Macro ── #}
+{% macro cat_icon(cat) %}{% set c = cat | lower %}{% if c == 'food' %}🍽️{% elif c == 'transport' %}🚗{% elif c == 'bills' %}⚡{% elif c == 'shopping' %}🛍️{% elif c == 'entertainment' %}🎬{% elif c == 'education' %}📚{% elif c == 'healthcare' %}💊{% elif c == 'investment' %}📈{% elif c == 'travel' %}✈️{% else %}💰{% endif %}{% endmacro %}
 
 {% block content %}
-<div class="dashboard-layout">
-  <aside class="dash-sidebar">
-    <a href="{{ url_for('dashboard') }}" class="sidebar-logo">
-      <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-        <path d="M12 10V30" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M12 10H26" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M12 20H18L26 12M26 12H21M26 12V17" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- ══════════════════════════════════════════════════════
+     KPI SUMMARY CARDS
+══════════════════════════════════════════════════════ -->
+<div class="bgt-kpi-grid">
+
+  <!-- Monthly Budget -->
+  <div class="bgt-kpi-card" id="kpiMonthlyBudget">
+    <div class="bgt-kpi-icon bgt-kpi-icon--blue">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
       </svg>
-      <span class="logo-text">FinSight</span>
-    </a>
-    <ul class="sidebar-nav">
-      <li>
-        <a href="{{ url_for('dashboard') }}" class="nav-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      <li>
-        <a href="{{ url_for('expenses') }}" class="nav-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          <span>Expenses</span>
-        </a>
-      </li>
-      <li>
-        <a href="{{ url_for('budgets') }}" class="nav-link active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-          <span>Budget</span>
-        </a>
-      </li>
-    </ul>
-    <div class="sidebar-user">
-      <div class="user-avatar">
-        {% if user.profile_image %}
-          <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}">
-        {% else %}
-          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#12395F,#10B981);font-size:13px;font-weight:700;">{{ user.name[0].upper() }}</div>
-        {% endif %}
-      </div>
-      <div class="user-info">
-        <span class="user-name">{{ user.name }}</span>
-        <span class="user-status">● Active Session</span>
-      </div>
     </div>
-  </aside>
-
-  <div class="dash-main">
-    <header class="dash-header">
-      <div class="dash-header-title">
-        <h1>Budgets</h1>
-        <p>Create and manage monthly budgets.</p>
-      </div>
-      <div class="dash-header-actions">
-        <a href="{{ url_for('create_budget') }}" class="btn btn-primary" style="width:auto;padding:8px 16px;">Create Budget</a>
-        <form action="{{ url_for('logout') }}" method="POST" style="margin:0;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" class="btn-logout">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Logout
-          </button>
-        </form>
-      </div>
-    </header>
-
-    <div class="dash-content">
-      <div class="mock-card" style="padding:18px; margin-bottom:18px;">
-        <div class="budget-overview-grid">
-          <div class="budget-overview-card">
-            <span class="mock-card-label">Monthly Budget</span>
-            <div class="budget-overview-value">{% if budget_summary.monthly_budget is not none %}{{ format_currency(budget_summary.monthly_budget) }}{% else %}—{% endif %}</div>
-            <span class="budget-overview-meta">{{ budget_summary.month_label }}</span>
-          </div>
-          <div class="budget-overview-card">
-            <span class="mock-card-label">Total Expenses</span>
-            <div class="budget-overview-value">{{ format_currency(budget_summary.total_expenses) }}</div>
-            <span class="budget-overview-meta">Spent this month</span>
-          </div>
-          <div class="budget-overview-card">
-            <span class="mock-card-label">Remaining Budget</span>
-            <div class="budget-overview-value {% if budget_summary.remaining_budget is not none and budget_summary.remaining_budget < 0 %}budget-overview-value--danger{% elif budget_summary.remaining_budget is not none %}budget-overview-value--success{% endif %}">{% if budget_summary.remaining_budget is not none %}{{ format_currency(budget_summary.remaining_budget) }}{% else %}—{% endif %}</div>
-            <span class="budget-overview-meta">Budget left</span>
-          </div>
-          <div class="budget-overview-card">
-            <span class="mock-card-label">Budget Utilization</span>
-            <div class="budget-overview-value">{% if budget_summary.budget_utilization is not none %}{{ '%.1f'|format(budget_summary.budget_utilization) }}%{% else %}—{% endif %}</div>
-            <span class="budget-overview-meta">Against your monthly limit</span>
-          </div>
-        </div>
-
-        <div class="budget-progress-panel">
-          <div class="budget-progress-header">
-            <span class="mock-card-label">Budget Status</span>
-            <span class="budget-status-pill budget-status-pill--{{ budget_summary.budget_status|lower|replace(' ', '-') }}">{{ budget_summary.budget_status }}</span>
-          </div>
-          <div class="budget-progress-bar"
-               role="progressbar"
-               aria-valuenow="{{ [budget_summary.progress_percent, 100]|min }}"
-               aria-valuemin="0"
-               aria-valuemax="100"
-               aria-label="Budget utilization">
-            <div class="budget-progress-fill budget-progress-fill--{{ budget_summary.budget_status|lower|replace(' ', '-') }}" style="width: {{ budget_summary.progress_percent }}%"></div>
-          </div>
-          <div class="budget-progress-meta">{% if budget_summary.budget_utilization is not none %}{{ '%.1f'|format(budget_summary.budget_utilization) }}{% else %}0.0{% endif %}% of your monthly budget has been used.</div>
-        </div>
-
-        {% if budget_summary.is_over_budget %}
-          <div class="budget-alert-card" role="alert">
-            <div style="display:flex;align-items:flex-start;gap:10px;">
-              <svg style="flex-shrink:0;margin-top:1px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              <div>
-                <div style="font-weight:700;margin-bottom:3px;">Monthly budget exceeded</div>
-                <div style="font-size:12px;opacity:0.85;">You have spent {{ format_currency(budget_summary.total_expenses - budget_summary.monthly_budget) }} over your {{ budget_summary.month_label }} limit. Consider reviewing your largest expense categories.</div>
-              </div>
-            </div>
-          </div>
-        {% endif %}
-      </div>
-
-      <div class="mock-card" style="padding:18px;">
-        {% if budgets %}
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead><tr><th>Month</th><th>Year</th><th class="col-amount">Amount</th><th class="col-actions">Actions</th></tr></thead>
-              <tbody>
-              {% for b in budgets %}
-                <tr>
-                  <td>{{ b.month }}</td>
-                  <td>{{ b.year }}</td>
-                  <td class="td-amount">{{ format_currency(b.amount) }}</td>
-                  <td class="td-actions">
-                    <a href="{{ url_for('edit_budget', budget_id=b.id) }}" class="btn btn-primary btn-sm">Edit</a>
-                    <button type="button" class="btn btn-danger btn-sm"
-                      data-delete-id="{{ b.id }}"
-                      data-delete-desc="{{ b.month }} {{ b.year }}"
-                      onclick="openBudgetDeleteModal(this)">Delete</button>
-                  </td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
+    <div class="bgt-kpi-body">
+      <span class="bgt-kpi-label">Monthly Budget</span>
+      <span class="bgt-kpi-value">
+        {% if budget_summary.monthly_budget is not none %}
+          {{ format_currency(budget_summary.monthly_budget) }}
         {% else %}
-          <div style="text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            <span style="font-size:14px;font-weight:600;color:var(--secondary-text);">No budgets set</span>
-            <span style="font-size:12px;color:var(--secondary-text);opacity:0.6;">Create a monthly budget to start tracking your spending limits.</span>
-            <a href="{{ url_for('create_budget') }}" class="btn btn-primary" style="width:auto;padding:8px 18px;margin-top:4px;">Create Your First Budget</a>
-          </div>
+          <span class="bgt-kpi-unset">Not set</span>
         {% endif %}
+      </span>
+      <span class="bgt-kpi-meta">{{ budget_summary.month_label }}</span>
+    </div>
+    <svg class="bgt-kpi-spark" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,26 16,20 32,22 48,14 64,18 80,10" fill="none" stroke="rgba(99,102,241,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Total Spent -->
+  <div class="bgt-kpi-card" id="kpiTotalSpent">
+    <div class="bgt-kpi-icon bgt-kpi-icon--red">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    </div>
+    <div class="bgt-kpi-body">
+      <span class="bgt-kpi-label">Total Spent</span>
+      <span class="bgt-kpi-value">{{ format_currency(budget_summary.total_expenses) }}</span>
+      <span class="bgt-kpi-meta">Spent this month</span>
+    </div>
+    <svg class="bgt-kpi-spark" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,28 16,22 32,24 48,10 64,16 80,8" fill="none" stroke="rgba(239,68,68,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Remaining -->
+  <div class="bgt-kpi-card" id="kpiRemaining">
+    <div class="bgt-kpi-icon bgt-kpi-icon--emerald">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <div class="bgt-kpi-body">
+      <span class="bgt-kpi-label">Remaining</span>
+      <span class="bgt-kpi-value {% if budget_summary.remaining_budget is not none and budget_summary.remaining_budget < 0 %}bgt-kpi-value--danger{% endif %}">
+        {% if budget_summary.remaining_budget is not none %}
+          {{ format_currency(budget_summary.remaining_budget) }}
+        {% else %}—{% endif %}
+      </span>
+      <span class="bgt-kpi-meta">Budget left</span>
+    </div>
+    <svg class="bgt-kpi-spark" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,22 16,18 32,20 48,12 64,14 80,6" fill="none" stroke="rgba(16,185,129,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Utilization -->
+  <div class="bgt-kpi-card" id="kpiUtilization">
+    <div class="bgt-kpi-icon bgt-kpi-icon--amber">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </div>
+    <div class="bgt-kpi-body">
+      <span class="bgt-kpi-label">Utilization</span>
+      <span class="bgt-kpi-value">
+        {% if budget_summary.budget_utilization is not none %}{{ '%.1f'|format(budget_summary.budget_utilization) }}%{% else %}—{% endif %}
+      </span>
+      <span class="bgt-kpi-meta">Against monthly limit</span>
+    </div>
+    <svg class="bgt-kpi-spark" viewBox="0 0 80 32" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="0,24 16,20 32,18 48,12 64,10 80,6" fill="none" stroke="rgba(245,158,11,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     BUDGET HEALTH HERO CARD
+══════════════════════════════════════════════════════ -->
+<div class="bgt-hero-card" id="budgetHealthCard">
+
+  <!-- Circular Progress -->
+  <div class="bgt-hero-left">
+    <div class="bgt-ring-wrap">
+      {% set pct = budget_summary.progress_percent | int %}
+      {% set stroke = 251.2 %}
+      {% set offset = stroke - (stroke * pct / 100) %}
+      {% if budget_summary.is_over_budget %}
+        {% set ring_color = '#EF4444' %}
+        {% set ring_class = 'bgt-ring--danger' %}
+      {% elif budget_summary.budget_utilization is not none and budget_summary.budget_utilization >= 80 %}
+        {% set ring_color = '#F59E0B' %}
+        {% set ring_class = 'bgt-ring--warn' %}
+      {% else %}
+        {% set ring_color = '#10B981' %}
+        {% set ring_class = 'bgt-ring--safe' %}
+      {% endif %}
+      <svg class="bgt-ring-svg" viewBox="0 0 90 90" aria-hidden="true">
+        <circle class="bgt-ring-track" cx="45" cy="45" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+        <circle class="bgt-ring-fill {{ ring_class }}"
+                cx="45" cy="45" r="40" fill="none"
+                stroke="{{ ring_color }}"
+                stroke-width="7"
+                stroke-linecap="round"
+                stroke-dasharray="{{ stroke }}"
+                stroke-dashoffset="{{ offset }}"
+                transform="rotate(-90 45 45)"/>
+      </svg>
+      <div class="bgt-ring-label">
+        <span class="bgt-ring-pct" style="color:{{ ring_color }}">{{ pct }}%</span>
+        <span class="bgt-ring-sub">used</span>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Budget Delete Confirmation Modal -->
-<div id="budgetDeleteModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
-  <div style="background:#0d2540;border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:28px 28px 24px;max-width:380px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-      <div style="width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+  <!-- Health Summary -->
+  <div class="bgt-hero-center">
+    <div class="bgt-status-pill bgt-status-pill--{{ budget_summary.budget_status | lower | replace(' ', '-') }}">
+      {% if budget_summary.is_over_budget %}
+        <span class="bgt-status-dot bgt-dot--red"></span> Over Budget
+      {% elif budget_summary.budget_utilization is not none and budget_summary.budget_utilization >= 80 %}
+        <span class="bgt-status-dot bgt-dot--amber"></span> Near Limit
+      {% elif budget_summary.budget_status == 'No Budget' %}
+        <span class="bgt-status-dot bgt-dot--grey"></span> No Budget
+      {% else %}
+        <span class="bgt-status-dot bgt-dot--green"></span> On Track
+      {% endif %}
+    </div>
+    <h2 class="bgt-hero-title">
+      {% if budget_summary.is_over_budget %}
+        Budget exceeded this month
+      {% elif budget_summary.budget_utilization is not none and budget_summary.budget_utilization >= 80 %}
+        Approaching budget limit
+      {% elif budget_summary.budget_status == 'No Budget' %}
+        No monthly budget set
+      {% else %}
+        You're within your monthly budget
+      {% endif %}
+    </h2>
+    <p class="bgt-hero-desc">
+      {% if budget_summary.is_over_budget %}
+        You've spent <strong>{{ format_currency(budget_summary.total_expenses) }}</strong> — overspent by <strong class="bgt-txt-red">{{ format_currency((budget_summary.total_expenses - budget_summary.monthly_budget)|abs) }}</strong> against your {{ budget_summary.month_label }} limit.
+      {% elif budget_summary.budget_utilization is not none %}
+        You've used <strong>{{ '%.1f'|format(budget_summary.budget_utilization) }}%</strong> of your {{ budget_summary.month_label }} budget. 
+        {% if budget_summary.remaining_budget is not none and budget_summary.remaining_budget > 0 %}<strong class="bgt-txt-green">{{ format_currency(budget_summary.remaining_budget) }}</strong> remains.{% endif %}
+      {% else %}
+        Create an overall monthly budget to start tracking your spending health.
+      {% endif %}
+    </p>
+
+    <!-- Progress bar -->
+    {% if budget_summary.budget_status != 'No Budget' %}
+    <div class="bgt-hero-bar-wrap">
+      <div class="bgt-hero-bar-track" role="progressbar" aria-valuenow="{{ [pct, 100]|min }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="bgt-hero-bar-fill bgt-bar--{{ budget_summary.budget_status | lower | replace(' ', '-') }}"
+             style="width: {{ [pct, 100]|min }}%"></div>
       </div>
-      <div>
-        <div style="font-size:15px;font-weight:700;color:#fff;">Delete Budget</div>
-        <div style="font-size:12px;color:var(--secondary-text);opacity:0.7;margin-top:2px;">This action cannot be undone.</div>
+      <div class="bgt-hero-bar-meta">
+        <span>{{ format_currency(budget_summary.total_expenses) }} spent</span>
+        {% if budget_summary.monthly_budget is not none %}<span>{{ format_currency(budget_summary.monthly_budget) }} limit</span>{% endif %}
       </div>
     </div>
-    <p id="budgetDeleteModalDesc" style="font-size:13px;color:var(--secondary-text);margin-bottom:22px;line-height:1.5;"></p>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="closeBudgetDeleteModal()" class="btn btn-secondary" style="width:auto;padding:9px 18px;margin:0;">Cancel</button>
+    {% endif %}
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="bgt-hero-right">
+    <div class="bgt-quick-stat">
+      <span class="bgt-qs-label">Month</span>
+      <span class="bgt-qs-value">{{ budget_summary.month_label }}</span>
+    </div>
+    <div class="bgt-quick-stat">
+      <span class="bgt-qs-label">Category Budgets</span>
+      <span class="bgt-qs-value">{{ category_budgets_progress | length }}</span>
+    </div>
+    <div class="bgt-quick-stat">
+      <span class="bgt-qs-label">Over Limit</span>
+      <span class="bgt-qs-value bgt-txt-red">{{ category_budgets_progress | selectattr('status', 'eq', 'Over Budget') | list | length }}</span>
+    </div>
+    <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-ghost bgt-btn-sm" id="heroAddBudgetBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Set Budget
+    </a>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     CATEGORY BUDGET CARDS
+══════════════════════════════════════════════════════ -->
+{% if category_budgets_progress %}
+<div class="bgt-section" id="categoryBudgetsSection">
+  <div class="bgt-section-header">
+    <div>
+      <h2 class="bgt-section-title">Category Budgets</h2>
+      <p class="bgt-section-sub">{{ budget_summary.month_label }} · {{ category_budgets_progress | length }} categories tracked</p>
+    </div>
+    <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-ghost bgt-btn-sm" id="addCategoryBudgetBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Category
+    </a>
+  </div>
+
+  <div class="bgt-cat-grid">
+    {% for cb in category_budgets_progress %}
+    {% set status_key = cb.status | lower | replace(' ', '-') %}
+    <div class="bgt-cat-card bgt-cat-card--{{ status_key }}" id="catCard-{{ cb.id }}">
+
+      <!-- Card Top -->
+      <div class="bgt-cat-top">
+        <div class="bgt-cat-icon-wrap bgt-cat-icon--{{ cb.category | lower | replace(' ', '-') }}">
+          <span class="bgt-cat-emoji">{{ cat_icon(cb.category) }}</span>
+        </div>
+        <div class="bgt-cat-info">
+          <span class="bgt-cat-name">{{ cb.category }}</span>
+          <span class="bgt-cat-limit">Limit: {{ format_currency(cb.limit) }}</span>
+        </div>
+        <span class="bgt-status-chip bgt-chip--{{ status_key }}">
+          {% if cb.status == 'Over Budget' %}🔴 Over{% elif cb.status == 'Near Limit' %}🟡 Near{% else %}🟢 Safe{% endif %}
+        </span>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="bgt-cat-bar-track" role="progressbar" aria-valuenow="{{ [cb.util_pct, 100]|min }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ cb.category }} budget utilization">
+        <div class="bgt-cat-bar-fill bgt-bar--{{ status_key }}"
+             style="width: {{ [cb.util_pct, 100]|min }}%"
+             data-pct="{{ cb.util_pct }}"></div>
+      </div>
+      <div class="bgt-cat-bar-labels">
+        <span class="bgt-pct-label">{{ '%.0f'|format(cb.util_pct) }}% used</span>
+        <span class="bgt-rem-label {% if cb.remaining < 0 %}bgt-txt-red{% else %}bgt-txt-green{% endif %}">
+          {% if cb.remaining < 0 %}−{{ format_currency(cb.remaining | abs) }} over{% else %}{{ format_currency(cb.remaining) }} left{% endif %}
+        </span>
+      </div>
+
+      <!-- Spend Row -->
+      <div class="bgt-cat-spend-row">
+        <div class="bgt-cat-spend-item">
+          <span class="bgt-cat-spend-label">Spent</span>
+          <span class="bgt-cat-spend-val bgt-txt-red">{{ format_currency(cb.spent) }}</span>
+        </div>
+        <div class="bgt-cat-spend-div"></div>
+        <div class="bgt-cat-spend-item">
+          <span class="bgt-cat-spend-label">Allocated</span>
+          <span class="bgt-cat-spend-val">{{ format_currency(cb.limit) }}</span>
+        </div>
+        <div class="bgt-cat-spend-div"></div>
+        <div class="bgt-cat-spend-item">
+          <span class="bgt-cat-spend-label">Remaining</span>
+          <span class="bgt-cat-spend-val {% if cb.remaining < 0 %}bgt-txt-red{% else %}bgt-txt-green{% endif %}">{{ format_currency(cb.remaining) }}</span>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+<!-- ══════════════════════════════════════════════════════
+     BUDGET INSIGHTS
+══════════════════════════════════════════════════════ -->
+{% if category_budgets_progress %}
+<div class="bgt-section" id="insightsSection">
+  <div class="bgt-section-header">
+    <div>
+      <h2 class="bgt-section-title">Budget Insights</h2>
+      <p class="bgt-section-sub">Automated observations for {{ budget_summary.month_label }}</p>
+    </div>
+  </div>
+  <div class="bgt-insights-grid">
+    {% for cb in category_budgets_progress %}
+      {% if cb.status == 'Over Budget' %}
+      <div class="bgt-insight bgt-insight--danger">
+        <span class="bgt-insight-icon">🔴</span>
+        <div>
+          <div class="bgt-insight-title">{{ cb.category }} exceeded budget</div>
+          <div class="bgt-insight-body">Overspent by {{ format_currency((cb.spent - cb.limit) | abs) }} ({{ '%.0f'|format(cb.util_pct) }}% used)</div>
+        </div>
+      </div>
+      {% elif cb.status == 'Near Limit' %}
+      <div class="bgt-insight bgt-insight--warn">
+        <span class="bgt-insight-icon">🟡</span>
+        <div>
+          <div class="bgt-insight-title">{{ cb.category }} is near its limit</div>
+          <div class="bgt-insight-body">{{ '%.0f'|format(cb.util_pct) }}% used — only {{ format_currency(cb.remaining) }} remaining.</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="bgt-insight bgt-insight--safe">
+        <span class="bgt-insight-icon">🟢</span>
+        <div>
+          <div class="bgt-insight-title">{{ cb.category }} is on track</div>
+          <div class="bgt-insight-body">{{ '%.0f'|format(cb.util_pct) }}% used — {{ format_currency(cb.remaining) }} still available.</div>
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if budget_summary.is_over_budget %}
+    <div class="bgt-insight bgt-insight--danger bgt-insight--wide">
+      <span class="bgt-insight-icon">⚠️</span>
+      <div>
+        <div class="bgt-insight-title">Monthly budget exceeded</div>
+        <div class="bgt-insight-body">Total spending of {{ format_currency(budget_summary.total_expenses) }} has surpassed your {{ budget_summary.month_label }} limit of {{ format_currency(budget_summary.monthly_budget) }}.</div>
+      </div>
+    </div>
+    {% elif budget_summary.budget_utilization is not none and budget_summary.budget_utilization >= 80 %}
+    <div class="bgt-insight bgt-insight--warn bgt-insight--wide">
+      <span class="bgt-insight-icon">📊</span>
+      <div>
+        <div class="bgt-insight-title">Monthly budget {{ '%.0f'|format(budget_summary.budget_utilization) }}% used</div>
+        <div class="bgt-insight-body">You have {{ format_currency(budget_summary.remaining_budget) }} remaining for the rest of {{ budget_summary.month_label }}. Consider slowing discretionary spending.</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+
+<!-- ══════════════════════════════════════════════════════
+     ALL BUDGETS TABLE
+══════════════════════════════════════════════════════ -->
+<div class="bgt-table-card" id="allBudgetsTable">
+
+  <div class="bgt-table-topbar">
+    <div class="bgt-table-meta">
+      <h2 class="bgt-table-title">All Budgets</h2>
+      <span class="bgt-count-pill">{{ budgets | length }} records</span>
+    </div>
+    <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-ghost bgt-btn-sm" id="tableAddBudgetBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add
+    </a>
+  </div>
+
+  {% if budgets %}
+  <table class="bgt-table" id="budgetsTable">
+    <thead>
+      <tr class="bgt-thead-row">
+        <th class="bgt-th">Period</th>
+        <th class="bgt-th">Category</th>
+        <th class="bgt-th bgt-th--right">Limit</th>
+        <th class="bgt-th bgt-th--hide-md">Notes</th>
+        <th class="bgt-th bgt-th--center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in budgets %}
+      <tr class="bgt-row" id="bgt-row-{{ b.id }}" tabindex="0">
+        <td class="bgt-td">
+          <span class="bgt-period-badge">{{ b.month }} {{ b.year }}</span>
+        </td>
+        <td class="bgt-td">
+          {% if b.category %}
+            <div class="bgt-table-cat">
+              <span class="bgt-table-cat-icon bgt-cat-icon--{{ b.category | lower | replace(' ', '-') }}">{{ cat_icon(b.category) }}</span>
+              <span class="bgt-badge bgt-badge--{{ b.category | lower | replace(' ', '-') }}">{{ b.category }}</span>
+            </div>
+          {% else %}
+            <span class="bgt-overall-badge">Overall</span>
+          {% endif %}
+        </td>
+        <td class="bgt-td bgt-td--right">
+          <span class="bgt-limit-val">{{ format_currency(b.amount) }}</span>
+        </td>
+        <td class="bgt-td bgt-td--hide-md">
+          <span class="bgt-notes-text">{{ b.description or '—' }}</span>
+        </td>
+        <td class="bgt-td bgt-td--center">
+          <div class="bgt-action-wrap">
+            <button class="bgt-dots" onclick="toggleBgtMenu(this, {{ b.id }})" title="Actions" aria-haspopup="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+              </svg>
+            </button>
+            <div class="bgt-dropdown" id="bgtMenu-{{ b.id }}" role="menu">
+              <a href="{{ url_for('edit_budget', budget_id=b.id) }}" class="bgt-dd-item bgt-dd-edit" role="menuitem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </a>
+              <button class="bgt-dd-item bgt-dd-delete"
+                      data-delete-id="{{ b.id }}"
+                      data-delete-desc="{{ b.month }} {{ b.year }}{% if b.category %} – {{ b.category }}{% endif %}"
+                      onclick="openBudgetDeleteModal(this)"
+                      role="menuitem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="bgt-empty" id="budgetEmptyState">
+    <div class="bgt-empty-icon-wrap">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(16,185,129,0.45)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      </svg>
+    </div>
+    <h3 class="bgt-empty-title">No budgets created yet</h3>
+    <p class="bgt-empty-sub">Create an overall monthly budget or set limits for individual spending categories.</p>
+    <a href="{{ url_for('create_budget') }}" class="bgt-btn bgt-btn-primary bgt-btn--lg" id="addFirstBudgetBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Your First Budget
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+
+<!-- Future-ready placeholder (collapsed by default) -->
+<div class="bgt-future-placeholder" id="budgetForecastPlaceholder" aria-hidden="true">
+  <div class="bgt-future-icon">🔮</div>
+  <div>
+    <div class="bgt-future-title">Budget Forecasting — Coming Soon</div>
+    <div class="bgt-future-body">AI-powered predictions and monthly comparisons will appear here.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     DELETE MODAL
+══════════════════════════════════════════════════════ -->
+<div id="budgetDeleteModal" class="bgt-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="bgtDeleteHeading">
+  <div class="bgt-modal">
+    <div class="bgt-modal-head">
+      <div class="bgt-modal-badge">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+      </div>
+      <div>
+        <p id="bgtDeleteHeading" class="bgt-modal-heading">Delete Budget</p>
+        <p class="bgt-modal-hint">This action cannot be undone.</p>
+      </div>
+      <button class="bgt-modal-x" onclick="closeBudgetDeleteModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p id="budgetDeleteModalDesc" class="bgt-modal-body"></p>
+    <div class="bgt-modal-foot">
+      <button onclick="closeBudgetDeleteModal()" class="bgt-btn bgt-btn-ghost" id="bgtDeleteCancelBtn">Cancel</button>
       <form id="budgetDeleteModalForm" method="POST" style="margin:0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="btn btn-danger" style="width:auto;padding:9px 18px;margin:0;">Delete</button>
+        <button type="submit" class="bgt-btn bgt-btn-danger" id="bgtDeleteConfirmBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Delete Budget
+        </button>
       </form>
     </div>
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE STYLES
+══════════════════════════════════════════════════════ -->
+<style>
+/* ── Animations ─────────────────────────── */
+@keyframes bgtFadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes bgtBarGrow {
+  from { width:0 !important; }
+}
+@keyframes bgtRingDraw {
+  from { stroke-dashoffset: 251.2; }
+}
+@keyframes bgtDropIn {
+  from { opacity:0; transform:translateY(-6px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes bgtModalIn {
+  from { opacity:0; transform:translateY(-14px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* ── Header actions ──────────────────────── */
+.bgt-header-actions { display:flex; align-items:center; gap:10px; }
+
+/* ── Shared buttons ──────────────────────── */
+.bgt-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px; border-radius:10px;
+  font-size:13px; font-weight:600; font-family:var(--font-family);
+  text-decoration:none; cursor:pointer; border:none;
+  transition:all 0.18s ease; white-space:nowrap; letter-spacing:0.01em;
+  position:relative; overflow:hidden;
+}
+.bgt-btn:active { transform:scale(0.97); }
+.bgt-btn--lg { padding:12px 26px; font-size:14px; border-radius:12px; }
+.bgt-btn-sm  { padding:7px 13px; font-size:12px; border-radius:9px; }
+
+.bgt-btn-primary {
+  background:linear-gradient(135deg,#10B981,#059669);
+  color:#fff; box-shadow:0 4px 14px rgba(16,185,129,0.35);
+}
+.bgt-btn-primary:hover { box-shadow:0 6px 22px rgba(16,185,129,0.5); transform:translateY(-1px); }
+
+.bgt-btn-ghost {
+  background:rgba(255,255,255,0.05); color:var(--secondary-text);
+  border:1px solid rgba(255,255,255,0.1);
+}
+.bgt-btn-ghost:hover { background:rgba(255,255,255,0.1); color:#fff; }
+
+.bgt-btn-danger {
+  background:linear-gradient(135deg,#EF4444,#DC2626);
+  color:#fff; box-shadow:0 4px 14px rgba(239,68,68,0.3);
+}
+.bgt-btn-danger:hover { box-shadow:0 6px 20px rgba(239,68,68,0.45); transform:translateY(-1px); }
+
+/* ── Shared colours ──────────────────────── */
+.bgt-txt-red   { color:#F87171 !important; }
+.bgt-txt-green { color:#34D399 !important; }
+.bgt-txt-amber { color:#FCD34D !important; }
+
+/* ── KPI Grid ────────────────────────────── */
+.bgt-kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:16px; margin-bottom:20px;
+  animation:bgtFadeUp 0.4s ease both;
+}
+.bgt-kpi-card {
+  position:relative; overflow:hidden;
+  background:rgba(14,32,51,0.75);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:20px;
+  display:flex; gap:14px; align-items:flex-start;
+  transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.bgt-kpi-card:hover { transform:translateY(-3px); box-shadow:0 14px 36px rgba(0,0,0,0.4); border-color:rgba(255,255,255,0.14); }
+.bgt-kpi-icon {
+  width:42px; height:42px; border-radius:11px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.bgt-kpi-icon--blue    { background:rgba(99,102,241,0.12); color:#818CF8; border:1px solid rgba(99,102,241,0.2); }
+.bgt-kpi-icon--red     { background:rgba(239,68,68,0.12); color:#F87171; border:1px solid rgba(239,68,68,0.2); }
+.bgt-kpi-icon--emerald { background:rgba(16,185,129,0.12); color:#34D399; border:1px solid rgba(16,185,129,0.2); }
+.bgt-kpi-icon--amber   { background:rgba(245,158,11,0.12); color:#FCD34D; border:1px solid rgba(245,158,11,0.2); }
+.bgt-kpi-body { flex:1; min-width:0; }
+.bgt-kpi-label { display:block; font-size:10.5px; font-weight:600; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+.bgt-kpi-value { display:block; font-size:22px; font-weight:700; color:#fff; line-height:1.1; margin-bottom:5px; letter-spacing:-0.02em; }
+.bgt-kpi-value--danger { color:#F87171 !important; }
+.bgt-kpi-unset { font-size:14px; color:rgba(255,255,255,0.3); font-weight:500; }
+.bgt-kpi-meta  { display:block; font-size:11px; color:rgba(255,255,255,0.35); }
+.bgt-kpi-spark { position:absolute; bottom:12px; right:12px; width:80px; height:30px; opacity:0.55; pointer-events:none; }
+
+/* ── Hero Card ───────────────────────────── */
+.bgt-hero-card {
+  display:grid; grid-template-columns:140px 1fr 160px;
+  gap:32px; align-items:center;
+  background:rgba(14,32,51,0.8);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:20px; padding:32px;
+  margin-bottom:20px;
+  animation:bgtFadeUp 0.45s ease 0.05s both;
+  position:relative; overflow:hidden;
+}
+.bgt-hero-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, #10B981 40%, transparent);
+}
+
+/* Ring */
+.bgt-hero-left { display:flex; justify-content:center; }
+.bgt-ring-wrap { position:relative; width:100px; height:100px; }
+.bgt-ring-svg  { width:100%; height:100%; }
+.bgt-ring-fill { animation:bgtRingDraw 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+.bgt-ring-label {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.bgt-ring-pct { font-size:22px; font-weight:800; line-height:1; letter-spacing:-0.03em; }
+.bgt-ring-sub { font-size:10px; color:rgba(255,255,255,0.4); font-weight:500; margin-top:2px; }
+
+/* Hero center */
+.bgt-hero-center { min-width:0; }
+.bgt-status-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 12px; border-radius:99px;
+  font-size:11px; font-weight:700; letter-spacing:0.04em;
+  margin-bottom:10px;
+}
+.bgt-status-pill--safe, .bgt-status-pill--on-track {
+  background:rgba(16,185,129,0.1); color:#34D399; border:1px solid rgba(16,185,129,0.2);
+}
+.bgt-status-pill--near-limit {
+  background:rgba(245,158,11,0.1); color:#FCD34D; border:1px solid rgba(245,158,11,0.2);
+}
+.bgt-status-pill--over-budget {
+  background:rgba(239,68,68,0.1); color:#F87171; border:1px solid rgba(239,68,68,0.2);
+}
+.bgt-status-pill--no-budget {
+  background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.08);
+}
+.bgt-status-dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.bgt-dot--green  { background:#10B981; }
+.bgt-dot--amber  { background:#F59E0B; }
+.bgt-dot--red    { background:#EF4444; }
+.bgt-dot--grey   { background:rgba(255,255,255,0.3); }
+
+.bgt-hero-title {
+  font-size:20px; font-weight:700; color:#fff;
+  letter-spacing:-0.02em; margin-bottom:8px; line-height:1.3;
+}
+.bgt-hero-desc { font-size:13.5px; color:rgba(255,255,255,0.55); line-height:1.65; margin-bottom:16px; }
+
+.bgt-hero-bar-wrap { }
+.bgt-hero-bar-track {
+  height:8px; background:rgba(255,255,255,0.06); border-radius:99px; overflow:hidden; margin-bottom:8px;
+}
+.bgt-hero-bar-fill { height:100%; border-radius:99px; animation:bgtBarGrow 1s cubic-bezier(0.4,0,0.2,1) forwards; }
+.bgt-bar--safe, .bgt-bar--on-track { background:linear-gradient(90deg,#10B981,#34D399); }
+.bgt-bar--near-limit { background:linear-gradient(90deg,#F59E0B,#FCD34D); }
+.bgt-bar--over-budget { background:linear-gradient(90deg,#EF4444,#F87171); }
+.bgt-bar--no-budget  { background:rgba(255,255,255,0.1); }
+.bgt-hero-bar-meta { display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.38); }
+
+/* Hero right */
+.bgt-hero-right { display:flex; flex-direction:column; gap:16px; border-left:1px solid rgba(255,255,255,0.07); padding-left:28px; }
+.bgt-quick-stat { display:flex; flex-direction:column; gap:2px; }
+.bgt-qs-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; }
+.bgt-qs-value { font-size:16px; font-weight:700; color:#fff; }
+
+
+/* ── Section Header ──────────────────────── */
+.bgt-section { margin-bottom:20px; animation:bgtFadeUp 0.5s ease 0.1s both; }
+.bgt-section-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; }
+.bgt-section-title { font-size:17px; font-weight:700; color:#fff; letter-spacing:-0.01em; margin-bottom:3px; }
+.bgt-section-sub { font-size:12px; color:rgba(255,255,255,0.38); }
+
+
+/* ── Category Cards Grid ─────────────────── */
+.bgt-cat-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:16px;
+}
+.bgt-cat-card {
+  background:rgba(14,32,51,0.7);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:16px; padding:20px;
+  transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display:flex; flex-direction:column; gap:14px;
+  position:relative; overflow:hidden;
+}
+.bgt-cat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.bgt-cat-card--safe::before { background:linear-gradient(90deg, transparent, rgba(16,185,129,0.5), transparent); }
+.bgt-cat-card--near-limit::before { background:linear-gradient(90deg, transparent, rgba(245,158,11,0.5), transparent); }
+.bgt-cat-card--over-budget::before { background:linear-gradient(90deg, transparent, rgba(239,68,68,0.5), transparent); }
+
+.bgt-cat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.4); border-color:rgba(255,255,255,0.12); }
+
+/* Card top row */
+.bgt-cat-top { display:flex; align-items:center; gap:12px; }
+.bgt-cat-icon-wrap {
+  width:38px; height:38px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+/* Icon tints — same palette as expenses page */
+.bgt-cat-icon--food          { background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.18); }
+.bgt-cat-icon--transport     { background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.18); }
+.bgt-cat-icon--bills         { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.18); }
+.bgt-cat-icon--shopping      { background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.18); }
+.bgt-cat-icon--entertainment { background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.18); }
+.bgt-cat-icon--education     { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.18); }
+.bgt-cat-icon--healthcare    { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.18); }
+.bgt-cat-icon--investment    { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.18); }
+.bgt-cat-icon--travel        { background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.18); }
+.bgt-cat-icon--other         { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); }
+.bgt-cat-emoji { line-height:1; }
+
+.bgt-cat-info { flex:1; min-width:0; }
+.bgt-cat-name  { display:block; font-size:14px; font-weight:700; color:#fff; }
+.bgt-cat-limit { display:block; font-size:11px; color:rgba(255,255,255,0.38); margin-top:1px; }
+
+/* Status chip */
+.bgt-status-chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:99px;
+  font-size:11px; font-weight:600; white-space:nowrap;
+}
+.bgt-chip--safe        { background:rgba(16,185,129,0.1); color:#34D399; border:1px solid rgba(16,185,129,0.2); }
+.bgt-chip--near-limit  { background:rgba(245,158,11,0.1); color:#FCD34D; border:1px solid rgba(245,158,11,0.2); }
+.bgt-chip--over-budget { background:rgba(239,68,68,0.1); color:#F87171; border:1px solid rgba(239,68,68,0.2); }
+
+/* Progress bar on card */
+.bgt-cat-bar-track {
+  height:6px; background:rgba(255,255,255,0.06); border-radius:99px; overflow:hidden;
+}
+.bgt-cat-bar-fill { height:100%; border-radius:99px; animation:bgtBarGrow 1s cubic-bezier(0.4,0,0.2,1) forwards; }
+.bgt-cat-bar-labels { display:flex; justify-content:space-between; font-size:11px; margin-top:5px; }
+.bgt-pct-label { color:rgba(255,255,255,0.4); }
+.bgt-rem-label { font-weight:600; }
+
+/* Spend row */
+.bgt-cat-spend-row { display:flex; align-items:center; gap:0; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px; }
+.bgt-cat-spend-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.bgt-cat-spend-div  { width:1px; height:28px; background:rgba(255,255,255,0.06); flex-shrink:0; }
+.bgt-cat-spend-label { font-size:10px; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; }
+.bgt-cat-spend-val   { font-size:13px; font-weight:700; color:#fff; }
+
+
+/* ── Insights Grid ───────────────────────── */
+.bgt-insights-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr));
+  gap:12px;
+}
+.bgt-insight {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:14px 16px; border-radius:12px;
+  border:1px solid transparent; transition:all 0.18s;
+}
+.bgt-insight:hover { transform:translateY(-1px); }
+.bgt-insight--safe   { background:rgba(16,185,129,0.06); border-color:rgba(16,185,129,0.15); }
+.bgt-insight--warn   { background:rgba(245,158,11,0.06); border-color:rgba(245,158,11,0.15); }
+.bgt-insight--danger { background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.15); }
+.bgt-insight--wide   { grid-column:1 / -1; }
+.bgt-insight-icon    { font-size:18px; flex-shrink:0; margin-top:1px; }
+.bgt-insight-title   { font-size:13px; font-weight:700; color:#fff; margin-bottom:3px; }
+.bgt-insight-body    { font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; }
+
+
+/* ── Budget Table ────────────────────────── */
+.bgt-table-card {
+  background:rgba(14,32,51,0.75);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px; overflow:hidden;
+  margin-bottom:20px;
+  animation:bgtFadeUp 0.5s ease 0.15s both;
+}
+.bgt-table-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 24px 14px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.bgt-table-meta { display:flex; align-items:baseline; gap:10px; }
+.bgt-table-title { font-size:16px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+.bgt-count-pill {
+  font-size:11.5px; color:rgba(255,255,255,0.35); font-weight:500;
+  background:rgba(255,255,255,0.06); padding:2px 10px; border-radius:99px;
+}
+.bgt-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+.bgt-thead-row { }
+.bgt-th {
+  padding:12px 20px 10px; text-align:left;
+  font-size:10.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.07em; color:rgba(255,255,255,0.38);
+  background:rgba(8,26,47,0.95);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  position:sticky; top:0; z-index:2;
+}
+.bgt-th--right  { text-align:right; }
+.bgt-th--center { text-align:center; width:80px; }
+.bgt-th--hide-md { }
+
+.bgt-row { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.15s; outline:none; }
+.bgt-row:last-child { border-bottom:none; }
+.bgt-row:hover { background:rgba(255,255,255,0.028); }
+.bgt-row:focus-visible { background:rgba(16,185,129,0.04); outline:2px solid rgba(16,185,129,0.3); outline-offset:-2px; }
+
+.bgt-td { padding:14px 20px; vertical-align:middle; color:var(--secondary-text); }
+.bgt-td--right  { text-align:right; }
+.bgt-td--center { text-align:center; }
+.bgt-td--hide-md { }
+
+.bgt-period-badge {
+  display:inline-flex; align-items:center; padding:3px 10px;
+  background:rgba(99,102,241,0.1); color:#818CF8;
+  border:1px solid rgba(99,102,241,0.2);
+  border-radius:99px; font-size:11.5px; font-weight:600;
+}
+.bgt-table-cat { display:flex; align-items:center; gap:8px; }
+.bgt-table-cat-icon { font-size:16px; }
+
+/* Category badges — matches expenses page palette */
+.bgt-badge {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:99px;
+  font-size:11.5px; font-weight:600; white-space:nowrap;
+}
+.bgt-badge--food          { background:rgba(249,115,22,0.1); color:#FB923C; }
+.bgt-badge--transport     { background:rgba(59,130,246,0.1); color:#60A5FA; }
+.bgt-badge--bills         { background:rgba(245,158,11,0.1); color:#FCD34D; }
+.bgt-badge--shopping      { background:rgba(168,85,247,0.1); color:#C084FC; }
+.bgt-badge--entertainment { background:rgba(236,72,153,0.1); color:#F472B6; }
+.bgt-badge--education     { background:rgba(99,102,241,0.1); color:#818CF8; }
+.bgt-badge--healthcare    { background:rgba(16,185,129,0.1); color:#34D399; }
+.bgt-badge--investment    { background:rgba(16,185,129,0.1); color:#6EE7B7; }
+.bgt-badge--travel        { background:rgba(14,165,233,0.1); color:#38BDF8; }
+.bgt-badge--other         { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.45); }
+
+.bgt-overall-badge { font-size:12px; color:rgba(255,255,255,0.45); font-style:italic; }
+.bgt-limit-val  { font-size:14px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums; }
+.bgt-notes-text { font-size:12px; color:rgba(255,255,255,0.38); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+
+/* Three-dot menu */
+.bgt-action-wrap { position:relative; display:flex; justify-content:center; }
+.bgt-dots {
+  width:32px; height:32px; border-radius:8px;
+  background:transparent; border:1px solid transparent;
+  color:rgba(255,255,255,0.28); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.bgt-dots:hover { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.1); color:#fff; }
+
+.bgt-dropdown {
+  display:none; position:absolute; top:calc(100% + 5px); right:0;
+  min-width:148px; background:#0d2540;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px; box-shadow:0 16px 40px rgba(0,0,0,0.55);
+  z-index:100; overflow:hidden;
+  animation:bgtDropIn 0.15s ease;
+}
+.bgt-dropdown.open { display:block; }
+.bgt-dd-item {
+  display:flex; align-items:center; gap:10px; padding:11px 15px;
+  font-size:13px; font-weight:500; cursor:pointer; transition:background 0.12s;
+  text-decoration:none; font-family:var(--font-family);
+  width:100%; border:none; background:transparent; text-align:left;
+}
+.bgt-dd-edit   { color:rgba(255,255,255,0.78); }
+.bgt-dd-delete { color:#F87171; }
+.bgt-dd-item:hover { background:rgba(255,255,255,0.06); }
+.bgt-dd-delete:hover { background:rgba(239,68,68,0.08); }
+
+
+/* ── Empty State ─────────────────────────── */
+.bgt-empty {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:80px 24px 90px; gap:18px;
+}
+.bgt-empty-icon-wrap {
+  width:88px; height:88px; border-radius:22px;
+  background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.13);
+  display:flex; align-items:center; justify-content:center;
+}
+.bgt-empty-title { font-size:19px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+.bgt-empty-sub   { font-size:14px; color:rgba(255,255,255,0.42); max-width:320px; line-height:1.65; }
+
+
+/* ── Future-ready placeholder ────────────── */
+.bgt-future-placeholder {
+  display:flex; align-items:center; gap:14px;
+  padding:16px 20px; border-radius:12px;
+  background:rgba(255,255,255,0.02);
+  border:1px dashed rgba(255,255,255,0.08);
+  margin-bottom:20px; opacity:0.6;
+}
+.bgt-future-icon  { font-size:22px; flex-shrink:0; }
+.bgt-future-title { font-size:13px; font-weight:600; color:rgba(255,255,255,0.5); margin-bottom:2px; }
+.bgt-future-body  { font-size:11.5px; color:rgba(255,255,255,0.28); }
+
+
+/* ── Delete Modal ────────────────────────── */
+.bgt-overlay {
+  position:fixed; inset:0; z-index:1000;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);
+}
+.bgt-modal {
+  background:linear-gradient(145deg,#0d2540,#0a1e35);
+  border:1px solid rgba(239,68,68,0.22);
+  border-radius:20px; padding:28px;
+  max-width:420px; width:90%;
+  box-shadow:0 32px 80px rgba(0,0,0,0.65);
+  animation:bgtModalIn 0.2s ease;
+}
+.bgt-modal-head { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.bgt-modal-badge {
+  width:46px; height:46px; border-radius:13px; flex-shrink:0;
+  background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);
+  display:flex; align-items:center; justify-content:center;
+}
+.bgt-modal-heading { font-size:16px; font-weight:700; color:#fff; }
+.bgt-modal-hint    { font-size:12px; color:rgba(255,255,255,0.38); margin-top:2px; }
+.bgt-modal-x {
+  margin-left:auto; background:rgba(255,255,255,0.06); border:none;
+  border-radius:8px; width:30px; height:30px;
+  display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,0.4); cursor:pointer; transition:all 0.15s;
+}
+.bgt-modal-x:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.bgt-modal-body { font-size:13.5px; color:rgba(255,255,255,0.52); line-height:1.65; margin-bottom:24px; }
+.bgt-modal-foot { display:flex; gap:10px; justify-content:flex-end; }
+
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width:1100px) {
+  .bgt-kpi-grid { grid-template-columns:repeat(2,1fr); }
+  .bgt-hero-card { grid-template-columns:120px 1fr; }
+  .bgt-hero-right { display:none; }
+}
+@media (max-width:800px) {
+  .bgt-hero-card { grid-template-columns:1fr; gap:20px; }
+  .bgt-hero-left { justify-content:flex-start; }
+  .bgt-cat-grid  { grid-template-columns:1fr; }
+  .bgt-th--hide-md, .bgt-td--hide-md { display:none; }
+}
+@media (max-width:600px) {
+  .bgt-kpi-grid { grid-template-columns:1fr 1fr; }
+  .bgt-kpi-value { font-size:18px; }
+  .bgt-kpi-spark { display:none; }
+  .bgt-insights-grid { grid-template-columns:1fr; }
+}
+@media (max-width:440px) {
+  .bgt-kpi-grid { grid-template-columns:1fr; }
+  .bgt-hero-card { padding:20px; }
+}
+</style>
+
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
 <script>
+/* ── Three-dot action menus ── */
+function closeAllBgtMenus() {
+  document.querySelectorAll('.bgt-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+function toggleBgtMenu(btn, id) {
+  const menu   = document.getElementById('bgtMenu-' + id);
+  const isOpen = menu.classList.contains('open');
+  closeAllBgtMenus();
+  if (!isOpen) menu.classList.add('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.bgt-action-wrap')) closeAllBgtMenus();
+});
+
+/* ── Delete Modal ── */
 function openBudgetDeleteModal(btn) {
-  var id = btn.getAttribute('data-delete-id');
-  var desc = btn.getAttribute('data-delete-desc');
-  document.getElementById('budgetDeleteModalDesc').textContent = 'Are you sure you want to delete the budget for ' + desc + '?';
+  const id   = btn.getAttribute('data-delete-id');
+  const desc = btn.getAttribute('data-delete-desc');
+  document.getElementById('budgetDeleteModalDesc').textContent =
+    'Are you sure you want to permanently delete the budget for ' + desc + '? This cannot be undone.';
   document.getElementById('budgetDeleteModalForm').action = '/budgets/' + id + '/delete';
-  var modal = document.getElementById('budgetDeleteModal');
+  const modal = document.getElementById('budgetDeleteModal');
   modal.style.display = 'flex';
+  closeAllBgtMenus();
 }
 function closeBudgetDeleteModal() {
   document.getElementById('budgetDeleteModal').style.display = 'none';
@@ -195,8 +993,29 @@ function closeBudgetDeleteModal() {
 document.getElementById('budgetDeleteModal').addEventListener('click', function(e) {
   if (e.target === this) closeBudgetDeleteModal();
 });
+
+/* ── Keyboard shortcuts ── */
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeBudgetDeleteModal();
+  if (e.key === 'Escape') { closeBudgetDeleteModal(); closeAllBgtMenus(); }
 });
+
+/* ── Animate progress bars on scroll into view ── */
+(function() {
+  if (!('IntersectionObserver' in window)) return;
+  const fills = document.querySelectorAll('.bgt-cat-bar-fill, .bgt-hero-bar-fill');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  fills.forEach(f => {
+    f.style.animationPlayState = 'paused';
+    obs.observe(f);
+  });
+})();
 </script>
+
 {% endblock %}

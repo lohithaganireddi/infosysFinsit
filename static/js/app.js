@@ -35,15 +35,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   });
 
-  // Animate Health Progress Bar
-  const healthBar = document.getElementById('healthProgressFill');
-  if (healthBar) {
+  // Animate Circular Health Ring SVG
+  const ringFill = document.getElementById('healthRingFill');
+  if (ringFill) {
+    const score = parseFloat(ringFill.getAttribute('data-score') || '0');
+    const circumference = 283;
+    const offset = circumference - (circumference * Math.min(100, Math.max(0, score)) / 100);
     setTimeout(() => {
-      healthBar.style.width = '94%';
-      healthBar.style.transition = 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
-    }, 200);
+      ringFill.style.strokeDashoffset = offset;
+    }, 250);
   }
-  
+
+  // Respect prefers-reduced-motion for background blob animations
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.blur-blob').forEach(blob => {
+      blob.style.animation = 'none';
+      blob.style.transform = 'none';
+    });
+    document.querySelectorAll('.particle').forEach(p => {
+      p.style.animation = 'none';
+    });
+  }
+
+  // Flash alert dismiss handlers (close button)
+  document.querySelectorAll('.flash-close-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const alert = btn.closest('.flash-alert');
+      if (alert) {
+        alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-8px)';
+        setTimeout(() => alert.remove(), 320);
+      }
+    });
+  });
+
   // ==========================================================================
   // Password Visibility Toggle
   // ==========================================================================
@@ -686,4 +712,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================================================
+  // Mobile Sidebar Drawer Toggle
+  // ==========================================================================
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const dashSidebar = document.getElementById('dashSidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  function openSidebar() {
+    if (dashSidebar) dashSidebar.classList.add('mobile-open');
+    if (sidebarOverlay) sidebarOverlay.classList.add('active');
+    if (hamburgerBtn) {
+      hamburgerBtn.classList.add('open');
+      hamburgerBtn.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  function closeSidebar() {
+    if (dashSidebar) dashSidebar.classList.remove('mobile-open');
+    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+    if (hamburgerBtn) {
+      hamburgerBtn.classList.remove('open');
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dashSidebar && dashSidebar.classList.contains('mobile-open');
+      if (isOpen) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
 });
+

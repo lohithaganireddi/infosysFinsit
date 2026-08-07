@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}Financial Goals & Targets | FinSight{% endblock %}
+{% block header_title %}Financial Goals{% endblock %}
+{% block header_description %}Set savings milestones, track target deadlines, and monitor your long-term wealth progress.{% endblock %}
+
+{% block header_action %}
+<a href="{{ url_for('goals.add_goal') }}" class="bgt-btn bgt-btn-primary bgt-btn-sm" id="addGoalBtn">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Add Goal
+</a>
+{% endblock %}
+
+{% block content %}
+{% set total_sav = summary.total_saved or 0 %}
+{% set total_tar = summary.total_target or 0 %}
+{% set rem_sav = [0, total_tar - total_sav] | max %}
+{% set overall_pct = ((total_sav / total_tar) * 100) | round(1) if total_tar > 0 else 0 %}
+
+<div class="dash-exec-container" id="goalsPage">
+
+  <!-- ── 1. KPI QUAD CARDS ── -->
+  <div class="exec-kpi-quad" style="margin-bottom:24px;">
+
+    <!-- Card 1: Total Goals -->
+    <div class="exec-kpi-card glass-hover-card">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(99,102,241,0.12);color:#818CF8;border:1px solid rgba(99,102,241,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <span class="kpi-card-title">Total Goals</span>
+      </div>
+      <div class="kpi-card-body">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ summary.total_goals or 0 }}" data-decimals="0" style="color:#818CF8;">
+            {{ summary.total_goals }}
+          </div>
+          <div class="kpi-subtext">{{ summary.active_goals }} Active · {{ summary.completed_goals }} Completed</div>
+        </div>
+        <div class="kpi-sparkline">
+          <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
+            <path d="M2 18 L16 12 L30 16 L44 8 L62 4" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="62" cy="4" r="2.5" fill="#818CF8"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Amount Saved -->
+    <div class="exec-kpi-card glass-hover-card">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <span class="kpi-card-title">Amount Saved</span>
+      </div>
+      <div class="kpi-card-body">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ total_sav }}" data-prefix="{{ DEFAULT_CURRENCY }}" style="color:#34D399;">
+            {{ format_currency(total_sav) }}
+          </div>
+          <div class="kpi-subtext">of {{ format_currency(total_tar) }} Target</div>
+        </div>
+        <div class="kpi-sparkline">
+          <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
+            <path d="M2 20 L18 16 L34 10 L50 6 L62 2" stroke="#34D399" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="62" cy="2" r="2.5" fill="#34D399"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Remaining Capital Needed -->
+    <div class="exec-kpi-card glass-hover-card">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span class="kpi-card-title">Remaining Needed</span>
+      </div>
+      <div class="kpi-card-body">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ rem_sav }}" data-prefix="{{ DEFAULT_CURRENCY }}" style="color:#FCD34D;">
+            {{ format_currency(rem_sav) }}
+          </div>
+          <div class="kpi-subtext">Capital left to achieve target</div>
+        </div>
+        <div class="kpi-sparkline">
+          <svg width="60" height="24" viewBox="0 0 60 24" fill="none">
+            <path d="M2 4 L18 10 L34 14 L50 18 L62 22" stroke="#FCD34D" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="62" cy="22" r="2.5" fill="#FCD34D"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Overall Progress -->
+    <div class="exec-kpi-card glass-hover-card">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="kpi-card-title">Completion Ratio</span>
+      </div>
+      <div class="kpi-card-body">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular" style="color:#34D399;">
+            {{ overall_pct }}%
+          </div>
+          <div class="kpi-subtext">Across All Financial Targets</div>
+        </div>
+        <div class="mini-gauge-wrap">
+          <svg width="34" height="34" viewBox="0 0 36 36" class="mini-gauge-svg">
+            <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" />
+            <path class="gauge-fill" stroke-dasharray="{{ [100, overall_pct]|min }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#34D399" stroke-width="3.5" stroke-linecap="round" />
+          </svg>
+          <span class="mini-gauge-text" style="color:#34D399;">{{ overall_pct | round(0) | int }}%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── 2. GOALS GRID CARDS ── -->
+  {% if goals %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;">
+    {% for g in goals %}
+    {% set pct = ((g.saved_amount / g.target_amount) * 100) | round(1) if g.target_amount > 0 else 0 %}
+    {% set pct_capped = [pct, 100] | min %}
+    {% set remaining = g.target_amount - g.saved_amount %}
+
+    <div class="mock-card glass-hover-card" style="border-radius:18px;padding:22px;background:rgba(14,32,51,0.75);border:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden;">
+
+      <!-- Status badge -->
+      <div style="position:absolute;top:16px;right:16px;">
+        <span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;
+          {% if g.status == 'Completed' %}background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.2);
+          {% elif g.status == 'Paused' %}background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.2);
+          {% else %}background:rgba(99,102,241,0.12);color:#818CF8;border:1px solid rgba(99,102,241,0.2);{% endif %}">
+          {{ g.status }}
+        </span>
+      </div>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;gap:12px;padding-right:80px;">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(99,102,241,0.12);color:#818CF8;display:flex;align-items:center;justify-content:center;border:1px solid rgba(99,102,241,0.2);flex-shrink:0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ g.goal_name }}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);">{{ g.goal_type }}
+            {% if g.priority %} · <span style="color:{% if g.priority == 'High' %}#F87171{% elif g.priority == 'Medium' %}#FCD34D{% else %}#34D399{% endif %};">{{ g.priority }} Priority</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;color:rgba(255,255,255,0.5);">Target Completion</span>
+          <span style="font-size:12px;font-weight:700;color:#fff;">{{ pct_capped }}%</span>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;width:{{ pct_capped }}%;border-radius:99px;background:{% if pct >= 100 %}linear-gradient(90deg,#10B981,#34D399){% elif pct >= 75 %}linear-gradient(90deg,#818CF8,#a78bfa){% elif pct >= 50 %}linear-gradient(90deg,#F59E0B,#FCD34D){% else %}linear-gradient(90deg,#6366F1,#818CF8){% endif %};transition:width 0.8s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Amounts Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.04);">
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Target</div>
+          <div style="font-size:13px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;">{{ format_currency(g.target_amount) }}</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Saved</div>
+          <div style="font-size:13px;font-weight:700;color:#34D399;font-variant-numeric:tabular-nums;">{{ format_currency(g.saved_amount) }}</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Left</div>
+          <div style="font-size:13px;font-weight:700;color:{% if remaining <= 0 %}#34D399{% else %}#FCD34D{% endif %};font-variant-numeric:tabular-nums;">{{ format_currency([remaining, 0] | max) }}</div>
+        </div>
+      </div>
+
+      <!-- Deadline -->
+      <div style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:12px;color:rgba(255,255,255,0.4);">Target Deadline: {{ g.deadline }}</span>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05);">
+        <a href="{{ url_for('goals.edit_goal', goal_id=g.id) }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:rgba(99,102,241,0.08);color:#818CF8;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(99,102,241,0.12);transition:background 0.15s;" onmouseover="this.style.background='rgba(99,102,241,0.18)'" onmouseout="this.style.background='rgba(99,102,241,0.08)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </a>
+        <form method="POST" action="{{ url_for('goals.delete_goal', goal_id=g.id) }}" style="flex:1;" onsubmit="return confirm('Delete goal \'{{ g.goal_name }}\'? This cannot be undone.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:rgba(239,68,68,0.08);color:#F87171;font-size:12px;font-weight:600;border:1px solid rgba(239,68,68,0.12);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='rgba(239,68,68,0.18)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Delete
+          </button>
+        </form>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty State (Requirement 3) -->
+  <div class="mock-card" style="border-radius:18px;padding:56px 32px;text-align:center;background:rgba(14,32,51,0.75);border:1px solid rgba(255,255,255,0.08);">
+    <div style="width:56px;height:56px;border-radius:16px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(129,140,248,0.6)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+    <p style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.6);margin:0 0 6px 0;">No financial goals created yet.</p>
+    <p style="font-size:13px;color:rgba(255,255,255,0.3);margin:0 0 20px 0;">Set your first financial goal to start tracking progress.</p>
+    <a href="{{ url_for('goals.add_goal') }}" class="bgt-btn bgt-btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Goal
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

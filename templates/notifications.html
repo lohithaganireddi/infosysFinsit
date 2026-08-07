@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Financial Intelligence Center | FinSight{% endblock %}
+{% block header_title %}AI Financial Intelligence Center{% endblock %}
+{% block header_description %}Real-time financial alerts, threat detection, automated budget safeguards & AI recommendations.{% endblock %}
+
+{% block header_action %}
+<div style="display:flex;gap:10px;align-items:center;" class="no-print">
+  <!-- Export Notifications CSV Button -->
+  <a href="{{ url_for('export_reports_csv') }}" class="bgt-btn bgt-btn-ghost bgt-btn-sm" id="exportNotifBtn" title="Export Notification Log">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export CSV
+  </a>
+
+  <!-- Bulk Mark Read Button -->
+  {% if notif_stats and notif_stats.unread > 0 %}
+  <button onclick="markAllNotificationsRead()" class="bgt-btn bgt-btn-primary bgt-btn-sm" id="markAllReadBtn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    Mark All Read
+  </button>
+  {% endif %}
+
+  <!-- Clear All Button -->
+  {% if notif_stats and notif_stats.total > 0 %}
+  <button onclick="clearAllNotifications()" class="bgt-btn bgt-btn-ghost bgt-btn-sm" id="clearAllBtn" style="color:#F87171;" title="Clear notification archive">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    Clear All
+  </button>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+{% set total_cnt = notif_stats.total if notif_stats else (notifications | length) %}
+{% set unread_cnt = notif_stats.unread if notif_stats else 0 %}
+{% set high_priority_cnt = notif_stats.high_priority if notif_stats else 0 %}
+{% set ai_insights_cnt = notif_stats.ai_insights if notif_stats else 0 %}
+{% set health_score = notif_stats.health_score if notif_stats else 82 %}
+{% set health_label = notif_stats.health_label if notif_stats else 'Excellent' %}
+
+<div class="dash-exec-container" style="max-width:1160px;margin:0 auto;" id="notifCenterPage">
+
+  <!-- ── SECTION 1: 4 EXECUTIVE KPI CARDS ── -->
+  <div class="exec-kpi-quad" style="margin-bottom:24px;">
+
+    <!-- Card 1: Total Notifications -->
+    <div class="exec-kpi-card glass-hover-card" style="border-radius:16px;padding:20px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(99,102,241,0.12);color:#818CF8;border:1px solid rgba(99,102,241,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <span class="kpi-card-title">Total Notifications</span>
+      </div>
+      <div class="kpi-card-body" style="margin-top:12px;">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ total_cnt }}" data-decimals="0" style="color:#818CF8;font-size:24px;font-weight:800;">
+            {{ total_cnt }}
+          </div>
+          <div class="kpi-subtext" style="font-size:11.5px;color:rgba(255,255,255,0.45);">All System &amp; Financial Events</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: High Priority Alerts -->
+    <div class="exec-kpi-card glass-hover-card" style="border-radius:16px;padding:20px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(239,68,68,0.12);color:#F87171;border:1px solid rgba(239,68,68,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <span class="kpi-card-title">High Priority Alerts</span>
+      </div>
+      <div class="kpi-card-body" style="margin-top:12px;">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ high_priority_cnt }}" data-decimals="0" style="color:#F87171;font-size:24px;font-weight:800;">
+            {{ high_priority_cnt }}
+          </div>
+          <div class="kpi-subtext" style="font-size:11.5px;color:rgba(255,255,255,0.45);">Budget &amp; Risk Thresholds</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: AI Insights Generated -->
+    <div class="exec-kpi-card glass-hover-card" style="border-radius:16px;padding:20px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <span class="kpi-card-title">AI Insights Generated</span>
+      </div>
+      <div class="kpi-card-body" style="margin-top:12px;">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular animate-number" data-target="{{ ai_insights_cnt }}" data-decimals="0" style="color:#34D399;font-size:24px;font-weight:800;">
+            {{ ai_insights_cnt }}
+          </div>
+          <div class="kpi-subtext" style="font-size:11.5px;color:rgba(255,255,255,0.45);">Real-Time Intelligence Triggers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Financial Health Status -->
+    <div class="exec-kpi-card glass-hover-card" style="border-radius:16px;padding:20px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+      <div class="kpi-card-header">
+        <div class="kpi-icon-box" style="background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="kpi-card-title">Financial Health Index</span>
+      </div>
+      <div class="kpi-card-body" style="margin-top:12px;">
+        <div class="kpi-metric-wrap">
+          <div class="kpi-value num-tabular" style="color:#FCD34D;font-size:24px;font-weight:800;">
+            {{ health_score }}<span style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:600;">/100</span>
+          </div>
+          <div class="kpi-subtext" style="font-size:11.5px;color:#34D399;font-weight:600;">{{ health_label }} Rating</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SECTION 5 & 6: FILTER PILLS & SEARCH BAR ── -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    
+    <!-- Filter Pills Bar -->
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      {% set filter_pills = [
+        ('all', 'All', total_cnt),
+        ('unread', 'Unread', unread_cnt),
+        ('read', 'Read', notif_stats.read if notif_stats else 0),
+        ('budget', 'Budget', ''),
+        ('expenses', 'Expenses', ''),
+        ('investments', 'Investments', ''),
+        ('goals', 'Goals', ''),
+        ('ai', 'AI Insights', ''),
+        ('security', 'Security', ''),
+        ('high_priority', 'High Priority', high_priority_cnt)
+      ] %}
+
+      {% for key, label, count_val in filter_pills %}
+      <a href="{{ url_for('notifications', filter=key, q=search_query or '') }}"
+         style="padding:6px 14px;border-radius:99px;font-size:11.5px;font-weight:600;text-decoration:none;transition:all 0.18s;
+         {% if filter_type == key or (key == 'all' and not filter_type) %}
+           background:rgba(16,185,129,0.18);color:#34D399;border:1px solid rgba(16,185,129,0.35);box-shadow:0 0 10px rgba(16,185,129,0.15);
+         {% else %}
+           background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.08);
+         {% endif %}">
+        {{ label }}{% if count_val != '' %} ({{ count_val }}){% endif %}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Search Input Form -->
+    <form method="GET" action="{{ url_for('notifications') }}" style="display:flex;gap:8px;position:relative;">
+      <input type="hidden" name="filter" value="{{ filter_type or 'all' }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search category, title, date..." style="padding:8px 14px 8px 34px;border-radius:99px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:12px;outline:none;width:220px;font-family:Inter,sans-serif;">
+      {% if search_query %}
+      <a href="{{ url_for('notifications', filter=filter_type or 'all') }}" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);text-decoration:none;font-size:12px;">✕</a>
+      {% endif %}
+    </form>
+
+  </div>
+
+  <!-- ── MAIN CONTENT GRID: NOTIFICATIONS TIMELINE (LEFT) + AI PANEL (RIGHT) ── -->
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+
+    <!-- ── LEFT COLUMN: NOTIFICATION FEED & TIMELINE ── -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      {% if notifications %}
+      <div style="display:flex;flex-direction:column;gap:12px;" id="notifList">
+        {% for notif in notifications %}
+        
+        {# Determine priority, colors, border, and category icon #}
+        {% set n_type = (notif.type or 'system') | lower %}
+        {% set n_title = (notif.title or '') | lower %}
+
+        {% if 'budget' in n_type or 'exceeded' in n_title or 'warning' in n_title or 'critical' in n_title %}
+          {% set p_badge = 'Critical' %}
+          {% set p_color = '#F87171' %}
+          {% set p_bg = 'rgba(239,68,68,0.12)' %}
+          {% set p_border = '#F87171' %}
+          {% set cat_label = 'Budget Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' %}
+        {% elif 'expense' in n_type or 'spending' in n_title %}
+          {% set p_badge = 'Warning' %}
+          {% set p_color = '#FCD34D' %}
+          {% set p_bg = 'rgba(245,158,11,0.12)' %}
+          {% set p_border = '#F59E0B' %}
+          {% set cat_label = 'Expense Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' %}
+        {% elif 'investment' in n_type or 'portfolio' in n_title %}
+          {% set p_badge = 'Insight' %}
+          {% set p_color = '#C084FC' %}
+          {% set p_bg = 'rgba(168,85,247,0.12)' %}
+          {% set p_border = '#A855F7' %}
+          {% set cat_label = 'Investment Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>' %}
+        {% elif 'goal' in n_type or 'target' in n_title %}
+          {% set p_badge = 'Milestone' %}
+          {% set p_color = '#34D399' %}
+          {% set p_bg = 'rgba(16,185,129,0.12)' %}
+          {% set p_border = '#10B981' %}
+          {% set cat_label = 'Goal Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>' %}
+        {% elif 'security' in n_type or 'transaction' in n_title %}
+          {% set p_badge = 'Security' %}
+          {% set p_color = '#60A5FA' %}
+          {% set p_bg = 'rgba(59,130,246,0.12)' %}
+          {% set p_border = '#3B82F6' %}
+          {% set cat_label = 'Security Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' %}
+        {% elif 'ai' in n_type or 'intelligence' in n_title or 'report' in n_title %}
+          {% set p_badge = 'AI Intelligence' %}
+          {% set p_color = '#34D399' %}
+          {% set p_bg = 'rgba(16,185,129,0.12)' %}
+          {% set p_border = '#10B981' %}
+          {% set cat_label = 'AI Insights' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' %}
+        {% else %}
+          {% set p_badge = 'System' %}
+          {% set p_color = '#38BDF8' %}
+          {% set p_bg = 'rgba(56,189,248,0.12)' %}
+          {% set p_border = '#0EA5E9' %}
+          {% set cat_label = 'System Alert' %}
+          {% set icon_svg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' %}
+        {% endif %}
+
+        <!-- Notification Item Card with Priority Accent Border -->
+        <div class="notif-item-row glass-hover-card" id="notifRow-{{ notif.id }}"
+             style="display:flex;align-items:flex-start;gap:16px;padding:18px 20px;border-radius:16px;border-left:4px solid {{ p_border }};transition:all 0.22s ease;
+             {% if notif.is_read == 0 %}background:rgba(14,32,51,0.92);border-top:1px solid rgba(255,255,255,0.12);border-right:1px solid rgba(255,255,255,0.12);border-bottom:1px solid rgba(255,255,255,0.12);{% else %}background:rgba(14,32,51,0.6);border-top:1px solid rgba(255,255,255,0.04);border-right:1px solid rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.04);{% endif %}">
+
+          <!-- Category Icon Box -->
+          <div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:{{ p_bg }};color:{{ p_color }};border:1px solid {{ p_border }};margin-top:2px;">
+            {{ icon_svg | safe }}
+          </div>
+
+          <!-- Notification Card Body -->
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+              
+              <!-- Category Pill -->
+              <span style="padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:700;background:{{ p_bg }};color:{{ p_color }};border:1px solid {{ p_border }};text-transform:uppercase;letter-spacing:0.04em;">
+                {{ cat_label }}
+              </span>
+
+              <!-- Priority Badge -->
+              <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);">
+                • {{ p_badge }}
+              </span>
+
+              <!-- Time Tag -->
+              <span style="font-size:11.5px;color:rgba(255,255,255,0.35);margin-left:auto;">
+                {{ notif.created_at }}
+              </span>
+            </div>
+
+            <!-- Title -->
+            <h4 style="font-size:14.5px;font-weight:700;color:#fff;margin:0 0 6px 0;letter-spacing:-0.01em;">{{ notif.title }}</h4>
+
+            <!-- Message Body -->
+            <p style="font-size:13px;color:rgba(255,255,255,0.7);margin:0 0 10px 0;line-height:1.5;">{{ notif.message }}</p>
+
+            <!-- Card Bottom Action Bar -->
+            <div style="display:flex;align-items:center;gap:10px;" class="no-print">
+              {% if notif.is_read == 0 %}
+              <button onclick="markNotificationRead({{ notif.id }})" title="Mark as read"
+                      style="background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.25);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;">
+                Mark Read
+              </button>
+              {% else %}
+              <span style="font-size:10.5px;color:rgba(255,255,255,0.3);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.03);">Read</span>
+              {% endif %}
+
+              <button onclick="deleteNotification({{ notif.id }})" title="Delete alert"
+                      style="background:rgba(239,68,68,0.08);color:#F87171;border:1px solid rgba(239,68,68,0.18);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;">
+                Delete
+              </button>
+
+              <button onclick="viewNotificationDetails('{{ notif.title|escape }}', '{{ notif.message|escape }}', '{{ cat_label }}', '{{ notif.created_at }}')" title="View details"
+                      style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.08);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;">
+                View Details
+              </button>
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <!-- ── SECTION 3: EMPTY STATE ("No financial alerts today") ── -->
+      <div class="mock-card" style="border-radius:20px;padding:54px 20px;background:rgba(14,32,51,0.75);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+        <div style="width:64px;height:64px;border-radius:18px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.18);display:flex;align-items:center;justify-content:center;margin:0 auto 16px auto;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 style="font-size:17px;font-weight:700;color:#fff;margin:0 0 6px 0;">No financial alerts today.</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,0.45);margin:0;max-width:380px;margin:0 auto;line-height:1.5;">Your budget, spending velocity, and investment portfolio are operating smoothly with zero system alerts.</p>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- ── RIGHT COLUMN: AI RECOMMENDATIONS PANEL & FINANCIAL TIMELINE ── -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- ── SECTION 7: AI RECOMMENDATION PANEL ── -->
+      <div class="mock-card glass-hover-card" style="border-radius:20px;padding:22px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(16,185,129,0.12);color:#34D399;display:flex;align-items:center;justify-content:center;border:1px solid rgba(16,185,129,0.25);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size:15px;font-weight:800;color:#fff;margin:0;">AI Intelligence Panel</h3>
+            <span style="font-size:11px;color:rgba(255,255,255,0.4);">Live SQLite Recommendations</span>
+          </div>
+        </div>
+
+        {% if ai_recommendations %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for rec in ai_recommendations[:4] %}
+          <div style="padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:700;color:{% if rec.priority == 'critical' %}#F87171{% elif rec.priority == 'warning' %}#FCD34D{% else %}#34D399{% endif %};">{{ rec.title }}</span>
+            </div>
+            <p style="font-size:12px;color:rgba(255,255,255,0.65);margin:0;line-height:1.4;">{{ rec.message }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;padding:16px 0;">All financial indicators are currently healthy.</div>
+        {% endif %}
+      </div>
+
+      <!-- ── SECTION 8: FINANCIAL TIMELINE ── -->
+      <div class="mock-card glass-hover-card" style="border-radius:20px;padding:22px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:rgba(99,102,241,0.12);color:#818CF8;display:flex;align-items:center;justify-content:center;border:1px solid rgba(99,102,241,0.25);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <h3 style="font-size:15px;font-weight:800;color:#fff;margin:0;">Financial Activity Timeline</h3>
+            <span style="font-size:11px;color:rgba(255,255,255,0.4);">Recent Event Ledger</span>
+          </div>
+        </div>
+
+        {% if activity_timeline and activity_timeline.all_events %}
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          {% for ev in activity_timeline.all_events[:6] %}
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:{{ ev.bg }};color:{{ ev.color }};display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;">
+              {{ ev.icon }}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ev.title }}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ev.description }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;padding:16px 0;">No activity logged.</div>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── DETAIL MODAL ── -->
+<div id="notifDetailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#0E2033;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:26px;width:100%;max-width:480px;color:#fff;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span id="modalCat" style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">Alert Details</span>
+      <span id="modalTime" style="font-size:11.5px;color:rgba(255,255,255,0.4);">Timestamp</span>
+    </div>
+    <h3 id="modalTitle" style="font-size:17px;font-weight:800;margin:0 0 10px 0;color:#fff;">Title</h3>
+    <p id="modalMsg" style="font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.5;margin:0 0 20px 0;">Message content</p>
+    <div style="text-align:right;">
+      <button onclick="document.getElementById('notifDetailModal').style.display='none'" class="bgt-btn bgt-btn-primary bgt-btn-sm">
+        Close Details
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = "{{ csrf_token }}";
+
+function markNotificationRead(notifId) {
+  fetch(`/notifications/${notifId}/read`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ csrf_token: csrfToken })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      const row = document.getElementById(`notifRow-${notifId}`);
+      if (row) {
+        row.style.background = 'rgba(14,32,51,0.6)';
+        row.style.borderColor = 'rgba(255,255,255,0.04)';
+        const btn = row.querySelector('button[title="Mark as read"]');
+        if (btn) btn.outerHTML = '<span style="font-size:10.5px;color:rgba(255,255,255,0.3);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.03);">Read</span>';
+      }
+    }
+  })
+  .catch(err => console.error('Error marking notification read:', err));
+}
+
+function deleteNotification(notifId) {
+  if (!confirm('Are you sure you want to delete this notification?')) return;
+  fetch(`/notifications/${notifId}/delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ csrf_token: csrfToken })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      const row = document.getElementById(`notifRow-${notifId}`);
+      if (row) row.remove();
+    }
+  })
+  .catch(err => console.error('Error deleting notification:', err));
+}
+
+function markAllNotificationsRead() {
+  fetch('/notifications/read-all', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ csrf_token: csrfToken })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      window.location.reload();
+    }
+  })
+  .catch(err => console.error('Error marking all read:', err));
+}
+
+function clearAllNotifications() {
+  if (!confirm('Are you sure you want to clear all notifications?')) return;
+  fetch('/notifications/clear-all', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ csrf_token: csrfToken })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      window.location.reload();
+    }
+  })
+  .catch(err => console.error('Error clearing all notifications:', err));
+}
+
+function viewNotificationDetails(title, msg, cat, timeStr) {
+  document.getElementById('modalTitle').innerText = title;
+  document.getElementById('modalMsg').innerText = msg;
+  document.getElementById('modalCat').innerText = cat;
+  document.getElementById('modalTime').innerText = timeStr;
+  document.getElementById('notifDetailModal').style.display = 'flex';
+}
+</script>
+{% endblock %}

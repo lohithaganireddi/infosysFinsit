@@ -3,85 +3,598 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="FinSight – Personal Finance & Investment Intelligence Platform. Track expenses, manage budgets, and get smart financial insights.">
-  <meta name="theme-color" content="#081A2F">
-  <title>{% block title %}FinSight – Personal Finance & Investment Intelligence{% endblock %}</title>
-  
+  <meta name="description" content="FinSight – Personal Finance &amp; Investment Intelligence Platform. Smart Finance. Smarter You.">
+  <meta name="theme-color" content="#08131F">
+  <title>{% block title %}FinSight – Personal Finance &amp; Investment Intelligence{% endblock %}</title>
+
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
-  
+
   <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Chart.js CDN for interactive visualizations -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  {% block chart_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  {% endblock %}
+
   <!-- Global Custom Styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  
+
   {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-  <!-- Backdrop mesh grid and calm glowing points -->
-  <div class="bg-mesh">
+  <!-- Background decorative layer -->
+  <div class="bg-mesh" aria-hidden="true">
     <div class="blur-blob blob-1"></div>
     <div class="blur-blob blob-2"></div>
-    <div class="blur-blob blob-3"></div>
     <div class="financial-grid"></div>
-    <div class="particle-container">
-      <div class="particle p-1"></div>
-      <div class="particle p-2"></div>
-      <div class="particle p-3"></div>
-      <div class="particle p-4"></div>
-      <div class="particle p-5"></div>
-      <div class="particle p-6"></div>
-      <div class="particle p-7"></div>
-      <div class="particle p-8"></div>
-    </div>
   </div>
 
-  <!-- Reusable alert flash banner block -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="alert-container" role="status" aria-live="polite" style="position: fixed; top: 24px; right: 24px; z-index: 1000; max-width: 380px; width: 100%;">
-        {% for category, message in messages %}
-          <div class="form-alert {{ 'success' if category == 'success' else 'error' }}">
-            {% if category == 'success' %}
-              <!-- Shield Check / Checkmark Icon -->
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            {% else %}
-              <!-- Warning / Error Icon -->
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            {% endif %}
-            <span class="alert-message">{{ message }}</span>
+  <!-- Flash alerts -->
+  {% include 'partials/flash.html' %}
+
+  <!-- App layout (only when logged in) -->
+  {% if session.get('user_id') and user %}
+    <div class="dashboard-layout" id="dashboardLayout">
+
+      <!-- Sidebar -->
+      {% include 'partials/sidebar.html' %}
+
+      <!-- Main content area -->
+      <div class="dash-main" id="dashMain">
+
+        <!-- Sticky Premium Top Bar Header -->
+        <header class="dash-header" role="banner">
+          <div class="dash-header-left">
+            <!-- Mobile hamburger toggle -->
+            <button class="hamburger-btn" id="hamburgerBtn"
+                    aria-label="Toggle navigation menu"
+                    aria-expanded="false"
+                    aria-controls="dashSidebar">
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+            </button>
+
+            <div class="dash-header-title">
+              <h1>{% block header_title %}Dashboard{% endblock %}</h1>
+              {% block header_description_inline %}{% endblock %}
+            </div>
           </div>
-        {% endfor %}
-      </div>
-      <script>
-        // Automatically fade out alerts after 5 seconds
-        setTimeout(() => {
-          document.querySelectorAll('.alert-container .form-alert').forEach(alertEl => {
-            alertEl.style.transition = 'opacity 0.5s ease';
-            alertEl.style.opacity = '0';
-            setTimeout(() => alertEl.remove(), 500);
-          });
-        }, 5000);
-      </script>
-    {% endif %}
-  {% endwith %}
 
-  <!-- Core Content Block -->
-  {% block content %}{% endblock %}
+          <!-- Header Center Search Bar -->
+          <div class="dash-header-search">
+            <div class="header-search-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" placeholder="Search anything..." aria-label="Global search">
+              <kbd class="search-kbd">⌘ K</kbd>
+            </div>
+          </div>
 
+          <!-- Header Right Actions -->
+          <div class="dash-header-actions">
+            {% block header_action %}{% endblock %}
+
+            <!-- Theme Toggle -->
+            <button class="header-icon-btn theme-toggle-btn" title="Toggle theme" aria-label="Toggle theme">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </button>
+
+            <!-- Notification bell with badge -->
+            <a href="{{ url_for('notifications') }}"
+               class="header-icon-btn notif-bell-btn"
+               title="Notification Center"
+               aria-label="Notifications">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="notif-badge-pill" aria-hidden="true">
+                {{ unread_notification_count if unread_notification_count and unread_notification_count > 0 else '3' }}
+              </span>
+            </a>
+
+            <!-- User profile dropdown trigger -->
+            <div class="header-user-dropdown">
+              <div class="header-user-avatar" aria-hidden="true">
+                {% if user and user.profile_image %}
+                  <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}" loading="lazy">
+                {% else %}
+                  <div class="user-avatar-initials">{{ user.name[0].upper() if user and user.name else 'L' }}</div>
+                {% endif %}
+              </div>
+              <span class="header-user-name">{{ user.name.split()[0] if user and user.name else 'Lohitha' }}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+
+          </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="dash-content" id="dashContent" role="main" tabindex="-1">
+  {% endif %}
+
+          {% block content %}{% endblock %}
+
+  {% if session.get('user_id') and user %}
+        </main>
+      </div><!-- /.dash-main -->
+    </div><!-- /.dashboard-layout -->
+  {% endif %}
+
+  <!-- Currency symbol global variable -->
   <script>
     window.DEFAULT_CURRENCY = {{ DEFAULT_CURRENCY|tojson }};
   </script>
 
-  <!-- Javascript Core Logic -->
+  <!-- Reusable Confirmation Modal -->
+  {% include 'partials/confirm_modal.html' %}
+
+  <!-- Core JavaScript -->
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block extra_js %}{% endblock %}
+
+  {% if session.get('user_id') %}
+  <!-- ═══════════════════════════════════════════
+       AI FINANCIAL COPILOT — Floating Panel
+  ═══════════════════════════════════════════ -->
+  <div id="copilotFab" class="copilot-fab" onclick="toggleCopilot()" title="AI Financial Copilot" aria-label="Open AI Financial Copilot">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    <span class="copilot-fab-label">AI</span>
+  </div>
+
+  <div id="copilotPanel" class="copilot-panel" role="dialog" aria-label="AI Financial Copilot" aria-hidden="true">
+    <div class="copilot-header">
+      <div class="copilot-header-left">
+        <div class="copilot-avatar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div>
+          <div class="copilot-title">FinSight AI Copilot</div>
+          <div class="copilot-status-row"><span class="copilot-online-dot"></span><div class="copilot-subtitle">Online · Financial Intelligence</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button onclick="clearCopilot()" class="copilot-clear-btn" title="Clear conversation" aria-label="Clear conversation">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
+        <button onclick="toggleCopilot()" class="copilot-close-btn" aria-label="Close">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="copilot-messages" id="copilotMessages">
+      <div class="copilot-msg copilot-msg-ai">
+        <div class="copilot-ai-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <div class="msg-bubble">Hello! I'm your <strong>FinSight AI Copilot</strong>. I have access to your real-time financial data.<br><br>Ask me about your health score, spending patterns, investments, or financial goals.</div>
+      </div>
+    </div>
+    <div class="copilot-quick-chips" id="copilotChips">
+      <button onclick="askCopilot('Explain my health score')" class="chip-btn">🏥 Health Score</button>
+      <button onclick="askCopilot('Analyze my spending')" class="chip-btn">💸 Spending</button>
+      <button onclick="askCopilot('Review my investments')" class="chip-btn">📈 Portfolio</button>
+      <button onclick="askCopilot('Check my goals')" class="chip-btn">🎯 Goals</button>
+    </div>
+    <div class="copilot-input-row">
+      <input type="text" id="copilotInput" class="copilot-input" placeholder="Ask about your finances…" onkeydown="if(event.key==='Enter')askCopilot()" maxlength="200" aria-label="Copilot message">
+      <button onclick="askCopilot()" class="copilot-send-btn" id="copilotSendBtn" aria-label="Send">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <div class="copilot-footer-bar">
+      <button onclick="openSimulator()" class="copilot-sim-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        What-If Simulator
+      </button>
+      <span class="copilot-powered">Powered by FinSight Intelligence</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       WHAT-IF SIMULATOR MODAL
+  ═══════════════════════════════════════════ -->
+  <div id="simulatorOverlay" class="simulator-overlay" onclick="closeSimulator()" role="dialog" aria-hidden="true">
+    <div class="simulator-modal" onclick="event.stopPropagation()">
+      <div class="simulator-modal-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="sim-header-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div>
+            <h2 class="simulator-title">What-If Financial Simulator</h2>
+            <p class="simulator-subtitle">Model scenarios instantly. See Before vs After impact on your finances.</p>
+          </div>
+        </div>
+        <button onclick="closeSimulator()" class="copilot-close-btn" aria-label="Close simulator">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="simulator-grid">
+        <!-- Left: Scenario Controls -->
+        <div class="simulator-controls">
+          <div class="sim-section-label">📊 Adjust Scenario</div>
+          <div class="sim-control-group">
+            <div class="sim-label-row">
+              <span class="sim-label">💸 Reduce Monthly Expenses</span>
+              <strong id="simExpLabel" class="sim-val-tag">₹0</strong>
+            </div>
+            <input type="range" min="0" max="20000" step="500" value="0" id="simExpSlider" class="sim-range" oninput="updateSimLabel('simExpLabel',this.value,'₹');runSimulation()">
+            <div class="sim-range-limits"><span>₹0</span><span>₹20,000</span></div>
+          </div>
+          <div class="sim-control-group">
+            <div class="sim-label-row">
+              <span class="sim-label">📈 Add Monthly Investment</span>
+              <strong id="simInvLabel" class="sim-val-tag">₹0</strong>
+            </div>
+            <input type="range" min="0" max="50000" step="1000" value="0" id="simInvSlider" class="sim-range" oninput="updateSimLabel('simInvLabel',this.value,'₹');runSimulation()">
+            <div class="sim-range-limits"><span>₹0</span><span>₹50,000</span></div>
+          </div>
+          <div class="sim-control-group">
+            <div class="sim-label-row">
+              <span class="sim-label">🏦 Change Monthly Budget</span>
+              <strong id="simBudLabel" class="sim-val-tag">₹0</strong>
+            </div>
+            <input type="range" min="-10000" max="30000" step="1000" value="0" id="simBudSlider" class="sim-range" oninput="updateSimLabel('simBudLabel',this.value,'₹');runSimulation()">
+            <div class="sim-range-limits"><span>-₹10K</span><span>+₹30K</span></div>
+          </div>
+          <button onclick="resetSimulator()" class="sim-reset-btn">↺ Reset All Sliders</button>
+        </div>
+        <!-- Right: Results Comparison -->
+        <div class="simulator-results">
+          <div class="sim-section-label">⚡ Projected Impact</div>
+          <div class="sim-compare-grid">
+            <div class="sim-compare-col sim-before-col">
+              <div class="sim-col-header">Current</div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Health Score</span><span class="sim-kpi-value" id="simBeforeHealth" style="color:rgba(255,255,255,0.5);">—</span></div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Budget Used</span><span class="sim-kpi-value" id="simBeforeUtil" style="color:rgba(255,255,255,0.5);">—</span></div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Savings</span><span class="sim-kpi-value" id="simBeforeSavings" style="color:rgba(255,255,255,0.5);">—</span></div>
+            </div>
+            <div class="sim-arrow-col">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(16,185,129,0.7)" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+            <div class="sim-compare-col sim-after-col">
+              <div class="sim-col-header" style="color:#34D399;">Projected</div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Health Score</span><span class="sim-kpi-value" id="simHealthScore">—</span></div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Budget Used</span><span class="sim-kpi-value" id="simUtilPct">—</span></div>
+              <div class="sim-compare-kpi"><span class="sim-kpi-label">Savings</span><span class="sim-kpi-value" id="simSavings">—</span></div>
+            </div>
+          </div>
+          <div class="sim-portfolio-row">
+            <span class="sim-kpi-label">Portfolio Valuation</span>
+            <span class="sim-kpi-value" id="simPortfolio" style="color:#818CF8;">—</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div style="background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+              <span class="sim-kpi-label">Yearly Benefit</span>
+              <div id="simYearlyBenefit" style="font-size:14px;font-weight:700;color:#34D399;margin-top:2px;">—</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+              <span class="sim-kpi-label">Risk / Success Prob</span>
+              <div id="simRiskProb" style="font-size:13px;font-weight:700;color:#60A5FA;margin-top:2px;">—</div>
+            </div>
+          </div>
+
+          <div class="sim-impact-badge" id="simImpactBadge"></div>
+          <div class="sim-ai-tip" id="simAiTip">Adjust sliders above to model your scenario.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       FLOATING COMMAND PALETTE MODAL (Ctrl+K)
+  ═══════════════════════════════════════════ -->
+  <div id="commandPalette" class="simulator-overlay" onclick="closeCmdPalette()" role="dialog" aria-hidden="true">
+    <div class="simulator-modal" style="max-width:560px;" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="cmdInput" placeholder="Type a command or search (e.g. 'Food expenses', 'Add Expense')..." style="width:100%;background:transparent;border:none;color:#fff;font-size:14px;outline:none;" onkeyup="filterCmdPalette(this.value)">
+        <span style="font-size:10px;color:rgba(255,255,255,0.3);padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);">ESC</span>
+      </div>
+      <div id="cmdResults" style="display:flex;flex-direction:column;gap:6px;margin-top:14px;max-height:280px;overflow-y:auto;">
+        <a href="{{ url_for('create_expense') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>💳 Add Expense</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Action</span></a>
+        <a href="{{ url_for('create_budget') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>🛡️ Create Budget</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Action</span></a>
+        <a href="{{ url_for('investments.add_investment') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>📈 Add Investment</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Action</span></a>
+        <a href="{{ url_for('goals.add_goal') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>🎯 Add Goal</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Action</span></a>
+        <a href="{{ url_for('reports') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>📜 View Executive Reports</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Navigation</span></a>
+        <a href="{{ url_for('analytics') }}" class="cmd-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);color:#fff;text-decoration:none;"><span>📊 View BI Analytics</span><span style="font-size:11px;color:rgba(255,255,255,0.4);">Navigation</span></a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const CSRF_TOK = {{ csrf_token|tojson }};
+  const CUR_SYM = window.DEFAULT_CURRENCY || '₹';
+
+  function toggleCopilot() {
+    const p = document.getElementById('copilotPanel');
+    const open = p.classList.toggle('copilot-panel--open');
+    p.setAttribute('aria-hidden', String(!open));
+    if (open) setTimeout(() => document.getElementById('copilotInput').focus(), 150);
+  }
+
+  let copilotHistory = [];
+
+  function getActiveChatBox() {
+    return document.getElementById('advCopilotMessages') || document.getElementById('copilotMessages');
+  }
+
+  function getActiveInput() {
+    const adv = document.getElementById('advCopilotInput');
+    if (adv) return adv;
+    return document.getElementById('copilotInput');
+  }
+
+  function addMsg(text, role) {
+    const boxes = [document.getElementById('advCopilotMessages'), document.getElementById('copilotMessages')].filter(Boolean);
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    boxes.forEach(b => {
+      const el = document.createElement('div');
+      el.className = 'copilot-msg copilot-msg-' + role;
+      const html = (text || '')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/^• (.+)$/gm,'<span class="cbullet">• $1</span>')
+        .replace(/\n/g,'<br>');
+      const iconHtml = role==='ai' ? '<div class="copilot-ai-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>' : '';
+      
+      let actionButtons = '';
+      if (role === 'ai') {
+        const textClean = text.replace(/`/g, '\\`').replace(/\\/g, '\\\\');
+        actionButtons = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+          <div style="display:flex;gap:8px;">
+            <button onclick="navigator.clipboard.writeText(\`${textClean}\`);this.textContent='Copied!';" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;">📋 Copy</button>
+            <button onclick="askCopilot('${copilotHistory.length ? copilotHistory[copilotHistory.length-1].text : 'Analyze my expenses'}')" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;">🔄 Retry</button>
+          </div>
+          <span style="font-size:9.5px;color:rgba(255,255,255,0.3);">${nowTime}</span>
+        </div>`;
+      } else {
+        actionButtons = `<div style="font-size:9.5px;color:rgba(255,255,255,0.3);margin-top:4px;text-align:right;">${nowTime}</div>`;
+      }
+
+      el.innerHTML = iconHtml + '<div class="msg-bubble">' + html + actionButtons + '</div>';
+      b.appendChild(el);
+      b.scrollTop = b.scrollHeight;
+    });
+
+    const chips = document.getElementById('copilotChips');
+    if (chips) chips.style.display = 'none';
+
+    if (!copilotHistory.length || copilotHistory[copilotHistory.length - 1].text !== text || copilotHistory[copilotHistory.length - 1].role !== role) {
+      copilotHistory.push({ role: role, text: text });
+    }
+  }
+
+  function addTyping() {
+    const boxes = [document.getElementById('advCopilotMessages'), document.getElementById('copilotMessages')].filter(Boolean);
+    boxes.forEach(b => {
+      const el = document.createElement('div');
+      el.id = 'copTyping_' + b.id; el.className = 'copilot-msg copilot-msg-ai cop-typing-el';
+      el.innerHTML = '<div class="copilot-ai-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div><div class="msg-bubble"><span class="typing-dots"><span></span><span></span><span></span></span></div>';
+      b.appendChild(el); b.scrollTop = b.scrollHeight;
+    });
+  }
+
+  function removeTyping() {
+    document.querySelectorAll('.cop-typing-el, #copTyping').forEach(t => t.remove());
+  }
+
+  function clearCopilot() {
+    copilotHistory = [];
+    const boxes = [document.getElementById('advCopilotMessages'), document.getElementById('copilotMessages')].filter(Boolean);
+    boxes.forEach(b => {
+      b.innerHTML = '<div class="copilot-msg copilot-msg-ai"><div class="copilot-ai-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div><div class="msg-bubble">Conversation cleared. How can I help you with your financial strategy today?</div></div>';
+    });
+    const chips = document.getElementById('copilotChips');
+    if (chips) chips.style.display = 'flex';
+  }
+
+  const FOLLOWUPS = {
+    health: ['What can I do to improve?','What are my risk areas?'],
+    spend:  ['Which category is highest?','How do I reduce expenses?'],
+    invest: ['Is my portfolio diversified?','What is my P&L?'],
+    goal:   ['When will I reach my goal?','How much more to save?'],
+    default:['Analyze my spending','Review my investments','Check my goals']
+  };
+
+  function addFollowups(topic) {
+    const boxes = [document.getElementById('advCopilotMessages'), document.getElementById('copilotMessages')].filter(Boolean);
+    const chips = FOLLOWUPS[topic] || FOLLOWUPS.default;
+    boxes.forEach(b => {
+      const el = document.createElement('div');
+      el.className = 'copilot-followup-row';
+      el.innerHTML = chips.map(c=>`<button class="chip-btn chip-followup" onclick="askCopilot('${c}')">${c}</button>`).join('');
+      b.appendChild(el);
+      b.scrollTop = b.scrollHeight;
+    });
+  }
+
+  function askCopilot(preset) {
+    console.log("1 - entered askCopilot");
+    const inp = getActiveInput();
+    const q = (preset || (inp ? inp.value : '') || '').trim();
+    if (!q) {
+      console.log("askCopilot aborted: query is empty");
+      return;
+    }
+
+    document.querySelectorAll('.copilot-followup-row').forEach(e=>e.remove());
+    addMsg(q, 'user');
+    console.log("2 - user message added");
+    
+    if (inp) inp.value = '';
+    
+    addTyping();
+    console.log("3 - typing indicator added");
+    
+    const sendBtns = [document.getElementById('advCopilotSendBtn'), document.getElementById('copilotSendBtn')].filter(Boolean);
+    sendBtns.forEach(btn => btn.disabled = true);
+
+    console.log("4 - fetch starting");
+
+    fetch('/api/copilot', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOK},
+      body:JSON.stringify({query:q, history:copilotHistory})
+    }).then(r=>{
+      console.log("5 - fetch completed");
+      if(!r.ok) throw new Error('HTTP error ' + r.status);
+      return r.json();
+    }).then(d=>{
+      removeTyping();
+      const respText = (d && d.success && d.response) ? d.response : "I'm temporarily unable to reach the AI model. I'm using FinSight's Financial Intelligence Engine instead.";
+      addMsg(respText, 'ai');
+      console.log("6 - AI message rendered");
+      const ql = q.toLowerCase();
+      const topic = ql.includes('health')||ql.includes('score') ? 'health'
+                  : ql.includes('spend')||ql.includes('expense') ? 'spend'
+                  : ql.includes('invest')||ql.includes('portfolio') ? 'invest'
+                  : ql.includes('goal')||ql.includes('save') ? 'goal' : 'default';
+      addFollowups(topic);
+    }).catch(err=>{
+      console.warn('Copilot request failed, falling back to local engine message:', err);
+      removeTyping();
+      addMsg("I'm temporarily unable to reach the AI model. I'm using FinSight's Financial Intelligence Engine instead.", 'ai');
+    }).finally(()=>{
+      sendBtns.forEach(btn => btn.disabled = false);
+    });
+  }
+
+  function openSimulator() {
+    const ov = document.getElementById('simulatorOverlay');
+    ov.classList.add('simulator-overlay--open');
+    ov.setAttribute('aria-hidden','false');
+    runSimulation();
+  }
+  function closeSimulator() {
+    const ov = document.getElementById('simulatorOverlay');
+    ov.classList.remove('simulator-overlay--open');
+    ov.setAttribute('aria-hidden','true');
+  }
+  function updateSimLabel(id, val, prefix) {
+    const n = parseInt(val, 10);
+    document.getElementById(id).textContent = (n >= 0 ? prefix : '-'+prefix) + Math.abs(n).toLocaleString('en-IN');
+  }
+  let _simTimer;
+  let _simBaseline = null;
+
+  function resetSimulator() {
+    ['simExpSlider','simInvSlider','simBudSlider'].forEach(id=>{ const el=document.getElementById(id); if(el){el.value=0;} });
+    updateSimLabel('simExpLabel','0','₹');
+    updateSimLabel('simInvLabel','0','₹');
+    updateSimLabel('simBudLabel','0','₹');
+    runSimulation();
+  }
+
+  function runSimulation() {
+    clearTimeout(_simTimer);
+    _simTimer = setTimeout(()=>{
+      const re = parseFloat(document.getElementById('simExpSlider').value)||0;
+      const ai = parseFloat(document.getElementById('simInvSlider').value)||0;
+      const cb = parseFloat(document.getElementById('simBudSlider').value)||0;
+      fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOK},body:JSON.stringify({reduce_expense:re,add_investment:ai,change_budget:cb})})
+      .then(r=>r.json()).then(d=>{
+        if(!d.success) return;
+        const s = d.simulated;
+        // Store baseline on first call (sliders at 0)
+        if(!_simBaseline) _simBaseline = {...s};
+        // Populate Before column with baseline
+        const bl = _simBaseline;
+        const elBH = document.getElementById('simBeforeHealth');
+        if(elBH) { elBH.textContent=bl.health_score+'/100'; elBH.style.color=bl.health_score>=75?'#34D399':bl.health_score>=50?'#FCD34D':'#F87171'; }
+        const elBU = document.getElementById('simBeforeUtil');
+        if(elBU) { elBU.textContent=bl.utilization+'%'; elBU.style.color=bl.utilization>100?'#F87171':bl.utilization>80?'#FCD34D':'#60A5FA'; }
+        const elBS = document.getElementById('simBeforeSavings');
+        if(elBS) elBS.textContent = CUR_SYM + bl.savings.toLocaleString('en-IN',{maximumFractionDigits:0});
+        // After column
+        const hs = s.health_score;
+        const elH = document.getElementById('simHealthScore');
+        elH.textContent = hs + '/100';
+        elH.style.color = hs>=75 ? '#34D399' : hs>=50 ? '#FCD34D' : '#F87171';
+        const elU = document.getElementById('simUtilPct');
+        elU.textContent = s.utilization + '%';
+        elU.style.color = s.utilization>100 ? '#F87171' : s.utilization>80 ? '#FCD34D' : '#60A5FA';
+        document.getElementById('simSavings').textContent = CUR_SYM + s.savings.toLocaleString('en-IN',{maximumFractionDigits:0});
+        document.getElementById('simPortfolio').textContent = CUR_SYM + s.investment.toLocaleString('en-IN',{maximumFractionDigits:0});
+
+        const elYB = document.getElementById('simYearlyBenefit');
+        if (elYB) elYB.textContent = '+' + CUR_SYM + (s.yearly_benefit || 0).toLocaleString('en-IN',{maximumFractionDigits:0}) + '/yr';
+        
+        const elRP = document.getElementById('simRiskProb');
+        if (elRP) elRP.textContent = (s.risk_level || 'Low') + ' Risk · ' + (s.success_probability || 90) + '% Prob';
+
+        // Impact badge
+        const badge = document.getElementById('simImpactBadge');
+        const scoreDiff = hs - (bl ? bl.health_score : hs);
+        if(badge) {
+          if(re>0||ai>0||cb>0) {
+            const impact = scoreDiff>5?'High Positive Impact':scoreDiff>0?'Positive Impact':scoreDiff<0?'Negative Impact':'Neutral';
+            const col = scoreDiff>0?'rgba(16,185,129,0.15)':scoreDiff<0?'rgba(239,68,68,0.15)':'rgba(255,255,255,0.05)';
+            const bcol = scoreDiff>0?'rgba(16,185,129,0.3)':scoreDiff<0?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.1)';
+            const tcol = scoreDiff>0?'#34D399':scoreDiff<0?'#F87171':'rgba(255,255,255,0.5)';
+            badge.innerHTML = `<span style="background:${col};border:1px solid ${bcol};color:${tcol};padding:5px 14px;border-radius:99px;font-size:11.5px;font-weight:700;">${scoreDiff>=0?'+':''}${scoreDiff} pts · ${impact}</span>`;
+          } else { badge.innerHTML=''; }
+        }
+        let tip = s.explanation || '';
+        if(!tip || tip==='No scenario parameters altered.') {
+          tip = '💡 Adjust sliders to see the impact of different financial decisions.';
+        } else {
+          tip = '💡 ' + tip;
+        }
+        document.getElementById('simAiTip').textContent = tip;
+      }).catch(console.error);
+    }, 300);
+  }
+
+  // Ctrl+K Command Palette & Keyboard Shortcuts
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openCmdPalette();
+    }
+    if (e.key === 'Escape') {
+      closeCmdPalette();
+    }
+  });
+
+  function openCmdPalette() {
+    const p = document.getElementById('commandPalette');
+    if (p) {
+      p.classList.add('simulator-overlay--open');
+      p.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('cmdInput').focus(), 150);
+    }
+  }
+
+  function closeCmdPalette() {
+    const p = document.getElementById('commandPalette');
+    if (p) {
+      p.classList.remove('simulator-overlay--open');
+      p.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function filterCmdPalette(val) {
+    const q = (val || '').toLowerCase().trim();
+    const items = document.querySelectorAll('#cmdResults .cmd-item');
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  }
+  </script>
+  {% endif %}
+
 </body>
 </html>
