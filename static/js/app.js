@@ -605,115 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // Chart.js Configuration for Dashboards / Previews
-  // ==========================================================================
-  
-  // 1. Line Chart: Portfolio Growth
-  const ctxPortfolio = document.getElementById('portfolioChart');
-  if (ctxPortfolio) {
-    const chartGradient = ctxPortfolio.getContext('2d').createLinearGradient(0, 0, 0, 150);
-    chartGradient.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
-    chartGradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-
-    new Chart(ctxPortfolio, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [{
-          label: `Portfolio Value (${currencySymbol})`,
-          data: [54000, 58200, 61000, 68900, 72000, 78400, 82140],
-          borderColor: '#10B981',
-          borderWidth: 2,
-          pointBackgroundColor: '#10B981',
-          pointHoverRadius: 5,
-          tension: 0.35,
-          fill: true,
-          backgroundColor: chartGradient,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            backgroundColor: '#081A2F',
-            titleFont: { family: 'Inter', size: 10, weight: '600' },
-            bodyFont: { family: 'Inter', size: 11 },
-            borderColor: 'rgba(255, 255, 255, 0.08)',
-            borderWidth: 1,
-            displayColors: false,
-            padding: 8
-          }
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: {
-              color: 'rgba(255, 255, 255, 0.4)',
-              font: { family: 'Inter', size: 9 }
-            }
-          },
-          y: {
-            grid: {
-              color: 'rgba(255, 255, 255, 0.04)',
-              drawBorder: false
-            },
-            ticks: {
-              color: 'rgba(255, 255, 255, 0.4)',
-              font: { family: 'Inter', size: 9 },
-              callback: (value) => `${currencySymbol}${value / 1000}k`
-            }
-          }
-        }
-      }
-    });
-  }
-
-  // 2. Doughnut Chart: Expenses Breakdown
-  const ctxExpense = document.getElementById('expenseChart');
-  if (ctxExpense) {
-    new Chart(ctxExpense, {
-      type: 'doughnut',
-      data: {
-        labels: ['SaaS', 'Housing', 'Investing', 'General'],
-        datasets: [{
-          data: [25, 45, 20, 10],
-          backgroundColor: [
-            '#10B981',
-            '#12395F',
-            '#22C55E',
-            '#F59E0B'
-          ],
-          borderColor: 'rgba(8, 26, 47, 0.8)',
-          borderWidth: 1.5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '72%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#081A2F',
-            titleFont: { family: 'Inter', size: 10 },
-            bodyFont: { family: 'Inter', size: 11 },
-            borderColor: 'rgba(255, 255, 255, 0.08)',
-            borderWidth: 1,
-            padding: 6,
-            callbacks: {
-              label: (context) => ` ${context.label}: ${context.raw}%`
-            }
-          }
-        }
-      }
-    });
-  }
-
-  // ==========================================================================
   // Mobile Sidebar Drawer Toggle
   // ==========================================================================
   const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -752,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (sidebarOverlay) {
     sidebarOverlay.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('touchstart', closeSidebar, { passive: true });
   }
 
   document.addEventListener('keydown', (e) => {

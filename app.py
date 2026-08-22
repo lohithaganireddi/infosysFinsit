@@ -52,9 +52,13 @@ from blueprints.goals import goals_bp
 # Application Configuration
 # ==========================================================================
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'finsight-dev-secret-key-2026-module1')
+app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
 DEFAULT_CURRENCY = '₹'
+
+# Session Cookie Security Settings
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # File Upload Settings
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
@@ -62,6 +66,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2 MB limit
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ALLOWED_EXTENSIONS'] = ALLOWED_EXTENSIONS
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # ==========================================================================
@@ -161,7 +166,7 @@ def inject_app_context():
 
     return {
         'csrf_token': session['csrf_token'],
-        'DEFAULT_CURRENCY': DEFAULT_CURRENCY,
+        'DEFAULT_CURRENCY': session.get('DEFAULT_CURRENCY', DEFAULT_CURRENCY),
         'format_currency': format_currency,
         'user': user_val,
         'build_page_link': build_page_link,
@@ -294,12 +299,11 @@ EXPENSE_SORT_CLAUSES = {
     'amount_desc': 'amount DESC, expense_date DESC',
 }
 
-# --- Root redirect ---
+# --- Root / Landing Page ---
 @app.route('/')
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    is_auth = 'user_id' in session
+    return render_template('landing.html', is_authenticated=is_auth)
 
 # --- Login ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -1402,6 +1406,83 @@ def clear_all_notifications():
     )
     db.commit()
     return {"success": True, "unread_count": 0}
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        action_type = request.form.get('action_type')
+        db = get_db()
+
+        if action_type == 'update_profile':
+            name = sanitize_input(request.form.get('name', ''))
+            phone = sanitize_input(request.form.get('phone', ''))
+            country = sanitize_input(request.form.get('country', ''))
+
+            if not name:
+                flash('Full name is required.', 'error')
+            else:
+                db.execute(
+                    'UPDATE users SET name = ?, phone = ?, country = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    (name, phone, country, user['id'])
+                )
+                db.commit()
+                flash('Profile details updated successfully.', 'success')
+                return redirect(url_for('profile'))
+
+        elif action_type == 'change_password':
+            curr_pass = request.form.get('current_password', '')
+            new_pass = request.form.get('new_password', '')
+            confirm_pass = request.form.get('confirm_password', '')
+
+            if not check_password_hash(user['password_hash'], curr_pass):
+                flash('Current password is incorrect.', 'error')
+            elif new_pass != confirm_pass:
+                flash('New passwords do not match.', 'error')
+            elif not is_strong_password(new_pass):
+                flash('New password does not meet security requirements.', 'error')
+            else:
+                new_hash = generate_password_hash(new_pass)
+                db.execute(
+                    'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    (new_hash, user['id'])
+                )
+                db.commit()
+                flash('Password changed successfully.', 'success')
+                return redirect(url_for('profile'))
+
+    health_info = calculate_health_score_detailed(user['id'])
+    portfolio_summary = calculate_portfolio_metrics(user['id'])
+    intel_summary = calculate_financial_intelligence(user['id'])
+
+    return render_template(
+        'profile.html',
+        user=user,
+        health_info=health_info,
+        portfolio_summary=portfolio_summary,
+        intel_summary=intel_summary
+    )
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        curr_symbol = request.form.get('currency_symbol', '₹')
+        session['DEFAULT_CURRENCY'] = curr_symbol
+        flash('Platform preferences saved successfully.', 'success')
+        return redirect(url_for('settings'))
+
+    return render_template('settings.html', user=user)
 
 
 @app.route('/expenses/new', methods=['GET', 'POST'])

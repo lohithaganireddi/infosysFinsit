@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinSight — Smart Finance. Smarter Decisions.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root {
+      --bg-dark: #081A2F;
+      --card-bg: rgba(14, 32, 51, 0.85);
+      --accent-emerald: #10B981;
+      --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+      --text-main: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.65);
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .landing-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(16px);
+      background: rgba(8, 26, 47, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 0 15px var(--accent-emerald-glow);
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #10B981;
+    }
+    .hero-section {
+      padding: 90px 0 70px 0;
+      text-align: center;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 99px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34D399;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .hero-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin: 0 0 18px 0;
+      line-height: 1.15;
+      background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 36px auto;
+      line-height: 1.6;
+    }
+    .hero-cta-group {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn-hero-primary {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14.5px;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+      transition: all 0.22s ease;
+    }
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(16, 185, 129, 0.5);
+    }
+    .btn-hero-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14.5px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .btn-hero-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin: 60px 0;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 28px;
+      transition: all 0.25s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(16, 185, 129, 0.3);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+    .feature-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: #fff;
+    }
+    .feature-card p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.55;
+    }
+    .stats-banner {
+      background: linear-gradient(135deg, rgba(14, 32, 51, 0.95), rgba(16, 185, 129, 0.12));
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 60px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 28px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: 900;
+      color: #34D399;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 600;
+    }
+    .landing-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 40px 0;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header / Navigation -->
+  <header class="landing-header">
+    <div class="container nav-flex">
+      <a href="{{ url_for('index') }}" class="brand-logo">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span>FinSight</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#intelligence">AI Intelligence</a></li>
+        <li><a href="#security">Security</a></li>
+        {% if is_authenticated %}
+        <li><a href="{{ url_for('dashboard') }}" class="btn-hero-primary" style="padding:8px 18px;font-size:13px;">Dashboard →</a></li>
+        {% else %}
+        <li><a href="{{ url_for('login') }}">Sign In</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn-hero-primary" style="padding:8px 18px;font-size:13px;">Get Started</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        AI-Powered Financial Intelligence Platform
+      </div>
+
+      <h1 class="hero-title">Smart Finance.<br>Smarter Decisions.</h1>
+
+      <p class="hero-subtitle">
+        FinSight integrates expense tracking, budget safeguards, portfolio analytics, financial goal planning, and predictive AI recommendations into one unified dashboard.
+      </p>
+
+      <div class="hero-cta-group">
+        {% if is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="btn-hero-primary">Launch Console Dashboard →</a>
+        <a href="{{ url_for('ai_advisor') }}" class="btn-hero-ghost">Ask AI Advisor</a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn-hero-primary">Get Started Free</a>
+        <a href="{{ url_for('login') }}" class="btn-hero-ghost">Sign In to Account</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section id="features" class="container">
+    <div style="text-align:center;margin-bottom:20px;">
+      <h2 style="font-size:28px;font-weight:800;margin:0 0 8px 0;">Comprehensive Financial Suite</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.5);margin:0;">Everything you need to analyze, protect, and grow your wealth.</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- 1. Expense Tracking -->
+      <div class="feature-card">
+        <div class="feature-icon-box" style="background:rgba(239,68,68,0.12);color:#F87171;border:1px solid rgba(239,68,68,0.25);">💳</div>
+        <h3>Expense Tracking &amp; OCR</h3>
+        <p>Log transactions with smart category tagging, receipt scanning AI, filter controls, and instant CSV statement exports.</p>
+      </div>
+
+      <!-- 2. Budget Safeguards -->
+      <div class="feature-card">
+        <div class="feature-icon-box" style="background:rgba(59,130,246,0.12);color:#60A5FA;border:1px solid rgba(59,130,246,0.25);">🛡️</div>
+        <h3>Budget Safeguards</h3>
+        <p>Set category ceiling limits and receive automated warnings before budget overruns occur.</p>
+      </div>
+
+      <!-- 3. Portfolio Intelligence -->
+      <div class="feature-card">
+        <div class="feature-icon-box" style="background:rgba(168,85,247,0.12);color:#C084FC;border:1px solid rgba(168,85,247,0.25);">📈</div>
+        <h3>Portfolio Intelligence</h3>
+        <p>Track stocks, mutual funds, ETFs, fixed deposits, and real estate with real-time profit &amp; loss calculations.</p>
+      </div>
+
+      <!-- 4. Goal Milestones -->
+      <div class="feature-card">
+        <div class="feature-icon-box" style="background:rgba(16,185,129,0.12);color:#34D399;border:1px solid rgba(16,185,129,0.25);">🎯</div>
+        <h3>Goal Milestone Tracking</h3>
+        <p>Define emergency funds or investment targets with progress meters and completion date estimations.</p>
+      </div>
+
+      <!-- 5. Explainable Health Score -->
+      <div class="feature-card" id="intelligence">
+        <div class="feature-icon-box" style="background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.25);">🧠</div>
+        <h3>Explainable Health Score</h3>
+        <p>Evaluate your financial health across 6 mathematical dimensions with score breakdown factors and improvement tips.</p>
+      </div>
+
+      <!-- 6. AI Advisor Copilot -->
+      <div class="feature-card">
+        <div class="feature-icon-box" style="background:rgba(14,165,233,0.12);color:#38BDF8;border:1px solid rgba(14,165,233,0.25);">🤖</div>
+        <h3>AI Copilot &amp; Scenario Simulator</h3>
+        <p>Ask natural language financial questions, run what-if spending simulations, and receive data-backed advice.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform Highlights Banner -->
+  <section id="security" class="container">
+    <div class="stats-banner">
+      <div>
+        <div class="stat-number">100%</div>
+        <div class="stat-label">SQLite Data Privacy</div>
+      </div>
+      <div>
+        <div class="stat-number">6-Dim</div>
+        <div class="stat-label">Health Score Engine</div>
+      </div>
+      <div>
+        <div class="stat-number">PDF &amp; Excel</div>
+        <div class="stat-label">Corporate Statement Exports</div>
+      </div>
+      <div>
+        <div class="stat-number">AES-256</div>
+        <div class="stat-label">Security Architecture</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="container">
+      <p>&copy; 2026 FinSight Intelligence Technologies. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

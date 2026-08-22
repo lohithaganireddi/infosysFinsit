@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}System & Platform Settings | FinSight{% endblock %}
+{% block header_title %}Platform Preferences &amp; Configuration{% endblock %}
+{% block header_description %}Customize display currencies, alert thresholds, interface options, and account security.{% endblock %}
+
+{% block content %}
+<div class="dash-exec-container" style="max-width:960px;margin:0 auto;" id="settingsPage">
+
+  <form method="POST" action="{{ url_for('settings') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Settings Card 1: Currency & Locale -->
+    <div class="mock-card glass-hover-card" style="border-radius:20px;padding:24px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.12);color:#34D399;display:flex;align-items:center;justify-content:center;font-size:18px;">
+          💱
+        </div>
+        <div>
+          <h3 style="font-size:16px;font-weight:800;color:#fff;margin:0;">Currency &amp; Localization</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.45);">Set default symbol across all tables and charts</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;">
+        {% set currencies = [('₹', 'INR - Indian Rupee (₹)'), ('$', 'USD - US Dollar ($)'), ('€', 'EUR - Euro (€)'), ('£', 'GBP - British Pound (£)')] %}
+        {% for sym, label in currencies %}
+        <label style="padding:14px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid {% if DEFAULT_CURRENCY == sym %}rgba(16,185,129,0.4){% else %}rgba(255,255,255,0.08){% endif %};display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="radio" name="currency_symbol" value="{{ sym }}" {% if DEFAULT_CURRENCY == sym %}checked{% endif %} style="accent-color:#10B981;">
+          <span style="font-size:13px;font-weight:600;color:#fff;">{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Settings Card 2: Notification Preferences -->
+    <div class="mock-card glass-hover-card" style="border-radius:20px;padding:24px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,0.12);color:#60A5FA;display:flex;align-items:center;justify-content:center;font-size:18px;">
+          🔔
+        </div>
+        <div>
+          <h3 style="font-size:16px;font-weight:800;color:#fff;margin:0;">Notification Triggers</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.45);">Configure automated threat and alert channels</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);cursor:pointer;">
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:#fff;">Budget Overrun Safeguards</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Generate high-priority notifications when category spending exceeds 80%.</div>
+          </div>
+          <input type="checkbox" name="notif_budget" checked style="accent-color:#10B981;width:18px;height:18px;">
+        </label>
+
+        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);cursor:pointer;">
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:#fff;">High-Value Outflow Alerts</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Trigger security logs for single expenses exceeding ₹1,000.</div>
+          </div>
+          <input type="checkbox" name="notif_security" checked style="accent-color:#10B981;width:18px;height:18px;">
+        </label>
+
+        <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);cursor:pointer;">
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:#fff;">Portfolio Valuation Updates</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Receive weekly summary alerts of unrealized P&amp;L gains and losses.</div>
+          </div>
+          <input type="checkbox" name="notif_investment" checked style="accent-color:#10B981;width:18px;height:18px;">
+        </label>
+      </div>
+    </div>
+
+    <!-- Settings Card 3: Display & Security -->
+    <div class="mock-card glass-hover-card" style="border-radius:20px;padding:24px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(168,85,247,0.12);color:#C084FC;display:flex;align-items:center;justify-content:center;font-size:18px;">
+          🎨
+        </div>
+        <div>
+          <h3 style="font-size:16px;font-weight:800;color:#fff;margin:0;">Visual Theme &amp; Security</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.45);">System identity status</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);">Interface Theme</div>
+          <div style="font-size:14px;font-weight:700;color:#34D399;margin-top:2px;">Dark Navy Glassmorphism (Default)</div>
+        </div>
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);">Active Session IP</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-top:2px;">127.0.0.1 (Local Session)</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right;">
+      <button type="submit" class="bgt-btn bgt-btn-primary bgt-btn-lg">
+        Save Platform Preferences
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

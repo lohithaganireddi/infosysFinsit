@@ -128,6 +128,7 @@ def investment_list():
 # ── ADD INVESTMENT ───────────────────────────────────────────────────────────
 
 @investments_bp.route('/add', methods=['GET', 'POST'])
+@investments_bp.route('/investments/new', methods=['GET', 'POST'])
 @login_required
 def add_investment():
     user = get_current_user()

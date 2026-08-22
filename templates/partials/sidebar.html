@@ -127,6 +127,28 @@
           <span class="nav-badge" aria-label="{{ unread_notification_count }} unread notifications">{{ unread_notification_count }}</span>
           {% endif %}
         </a>
+      <li class="sidebar-nav-section-label" style="margin-top:10px;">Account</li>
+
+      <li class="dash-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+        <a href="{{ url_for('profile') }}" aria-label="Profile" {% if request.endpoint == 'profile' %}aria-current="page"{% endif %}>
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <span class="nav-label">Profile</span>
+        </a>
+      </li>
+
+      <li class="dash-nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+        <a href="{{ url_for('settings') }}" aria-label="Settings" {% if request.endpoint == 'settings' %}aria-current="page"{% endif %}>
+          <span class="nav-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </span>
+          <span class="nav-label">Settings</span>
+        </a>
       </li>
 
     </ul>
@@ -134,17 +156,19 @@
 
   <!-- Sidebar Footer: User Profile & Logout -->
   <div class="sidebar-user">
-    <div class="sidebar-user-avatar" aria-hidden="true">
-      {% if user and user.profile_image %}
-        <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}" loading="lazy">
-      {% else %}
-        <div class="user-avatar-initials sidebar-avatar-initials">{{ user.name[0].upper() if user and user.name else 'U' }}</div>
-      {% endif %}
-    </div>
-    <div class="user-info">
-      <div class="user-name">{{ user.name.split()[0] if user and user.name else 'User' }}</div>
-      <div class="user-email">{{ user.email if user and user.email else '' }}</div>
-    </div>
+    <a href="{{ url_for('profile') }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0;">
+      <div class="sidebar-user-avatar" aria-hidden="true">
+        {% if user and user.profile_image %}
+          <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}" loading="lazy">
+        {% else %}
+          <div class="user-avatar-initials sidebar-avatar-initials">{{ user.name[0].upper() if user and user.name else 'U' }}</div>
+        {% endif %}
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ user.name.split()[0] if user and user.name else 'User' }}</div>
+        <div class="user-email">{{ user.email if user and user.email else '' }}</div>
+      </div>
+    </a>
     <form method="POST" action="{{ url_for('logout') }}" class="sidebar-logout-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit" class="sidebar-logout-btn" title="Sign out" aria-label="Sign out">
