@@ -51,15 +51,15 @@
             <div style="font-size:13.5px;font-weight:700;color:#fff;">Budget Overrun Safeguards</div>
             <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Generate high-priority notifications when category spending exceeds 80%.</div>
           </div>
-          <input type="checkbox" name="notif_budget" checked style="accent-color:#10B981;width:18px;height:18px;">
+          <input type="checkbox" name="notif_budget" {% if user_pref.notify_budget_alert %}checked{% endif %} style="accent-color:#10B981;width:18px;height:18px;">
         </label>
 
         <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);cursor:pointer;">
           <div>
             <div style="font-size:13.5px;font-weight:700;color:#fff;">High-Value Outflow Alerts</div>
-            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Trigger security logs for single expenses exceeding ₹1,000.</div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Trigger security logs for single expenses exceeding {{ DEFAULT_CURRENCY }}1,000.</div>
           </div>
-          <input type="checkbox" name="notif_security" checked style="accent-color:#10B981;width:18px;height:18px;">
+          <input type="checkbox" name="notif_security" {% if user_pref.notify_high_expense %}checked{% endif %} style="accent-color:#10B981;width:18px;height:18px;">
         </label>
 
         <label style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);cursor:pointer;">
@@ -67,7 +67,7 @@
             <div style="font-size:13.5px;font-weight:700;color:#fff;">Portfolio Valuation Updates</div>
             <div style="font-size:11.5px;color:rgba(255,255,255,0.45);">Receive weekly summary alerts of unrealized P&amp;L gains and losses.</div>
           </div>
-          <input type="checkbox" name="notif_investment" checked style="accent-color:#10B981;width:18px;height:18px;">
+          <input type="checkbox" name="notif_investment" {% if user_pref.notify_portfolio_alert %}checked{% endif %} style="accent-color:#10B981;width:18px;height:18px;">
         </label>
       </div>
     </div>

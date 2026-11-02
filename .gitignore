@@ -1,5 +1,16 @@
 __pycache__/
 *.pyc
-*.log
 .venv/
 venv/
+instance/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.bak
+.env
+.env.*
+!.env.example
+static/uploads/
+
+scratch/

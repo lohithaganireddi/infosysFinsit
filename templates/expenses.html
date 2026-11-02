@@ -120,7 +120,7 @@
 <div class="exp-filter-panel" id="expFilterPanel">
   <form method="GET" action="{{ url_for('expenses') }}" id="filterForm">
 
-    <!-- Row 1: Search + Selects -->
+    <!-- Row 1: Search + Selects + Filters Button -->
     <div class="exp-filter-row exp-filter-row--primary">
 
       <div class="exp-search-wrap">
@@ -141,10 +141,9 @@
       </div>
 
       <div class="exp-filter-group">
-        <label class="exp-filter-label" for="filterCategory">Category</label>
         <div class="exp-pill-select-wrap">
           <select name="category" id="filterCategory" class="exp-pill-select" onchange="this.form.submit()">
-            <option value="">All Categories</option>
+            <option value="">Category: All</option>
             {% for option in categories %}
               <option value="{{ option }}" {% if category == option %}selected{% endif %}>{{ option }}</option>
             {% endfor %}
@@ -154,10 +153,9 @@
       </div>
 
       <div class="exp-filter-group">
-        <label class="exp-filter-label" for="filterPayment">Payment</label>
         <div class="exp-pill-select-wrap">
           <select name="payment_method" id="filterPayment" class="exp-pill-select" onchange="this.form.submit()">
-            <option value="">All Methods</option>
+            <option value="">Payment: All</option>
             {% for method in payment_methods %}
               <option value="{{ method }}" {% if payment_method == method %}selected{% endif %}>{{ method }}</option>
             {% endfor %}
@@ -167,63 +165,78 @@
       </div>
 
       <div class="exp-filter-group">
-        <label class="exp-filter-label" for="filterSort">Sort By</label>
         <div class="exp-pill-select-wrap">
           <select name="sort" id="filterSort" class="exp-pill-select" onchange="this.form.submit()">
-            <option value="date_desc"   {% if sort == 'date_desc'   %}selected{% endif %}>Newest First</option>
-            <option value="date_asc"    {% if sort == 'date_asc'    %}selected{% endif %}>Oldest First</option>
-            <option value="amount_desc" {% if sort == 'amount_desc' %}selected{% endif %}>Highest Amount</option>
-            <option value="amount_asc"  {% if sort == 'amount_asc'  %}selected{% endif %}>Lowest Amount</option>
+            <option value="date_desc"   {% if sort == 'date_desc'   %}selected{% endif %}>Sort: Newest</option>
+            <option value="date_asc"    {% if sort == 'date_asc'    %}selected{% endif %}>Sort: Oldest</option>
+            <option value="amount_desc" {% if sort == 'amount_desc' %}selected{% endif %}>Sort: Highest</option>
+            <option value="amount_asc"  {% if sort == 'amount_asc'  %}selected{% endif %}>Sort: Lowest</option>
           </select>
           <svg class="exp-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
 
+      {% set active_adv_count = (1 if date_from else 0) + (1 if date_to else 0) + (1 if amount_min else 0) + (1 if amount_max else 0) %}
+      <div class="exp-filter-group">
+        <button type="button" class="exp-filters-toggle-btn {% if active_adv_count > 0 %}has-active{% endif %}" id="toggleAdvFiltersBtn" onclick="toggleAdvancedFilters()" aria-label="Toggle Advanced Filters">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          <span>Filters</span>
+          {% if active_adv_count > 0 %}
+            <span class="exp-filter-badge">• {{ active_adv_count }}</span>
+          {% endif %}
+          <span class="filters-btn-state" style="font-size: 10px; margin-left: 2px;">{% if active_adv_count > 0 %}▲{% else %}▼{% endif %}</span>
+        </button>
+      </div>
+
     </div>
 
-    <!-- Row 2: Date + Amount + Actions -->
-    <div class="exp-filter-row exp-filter-row--secondary">
+    <!-- Row 2: Collapsible Advanced Filters -->
+    <div class="exp-advanced-filters" id="expAdvancedFilters" style="{% if active_adv_count > 0 %}display: block;{% else %}display: none;{% endif %}">
+      <div class="exp-filter-row exp-filter-row--secondary">
 
-      <div class="exp-date-range">
-        <div class="exp-date-field">
-          <label class="exp-filter-label" for="filterDateFrom">From</label>
-          <input type="date" name="date_from" id="filterDateFrom" class="exp-date-input" value="{{ date_from }}">
-        </div>
-        <span class="exp-date-sep">—</span>
-        <div class="exp-date-field">
-          <label class="exp-filter-label" for="filterDateTo">To</label>
-          <input type="date" name="date_to" id="filterDateTo" class="exp-date-input" value="{{ date_to }}">
-        </div>
-      </div>
-
-      <div class="exp-amount-range">
-        <div class="exp-amount-field">
-          <label class="exp-filter-label" for="filterAmtMin">Min Amount</label>
-          <div class="exp-amount-wrap">
-            <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
-            <input type="number" name="amount_min" id="filterAmtMin" class="exp-amount-input" placeholder="0" value="{{ amount_min }}" min="0" step="0.01">
+        <div class="exp-date-range">
+          <div class="exp-date-field">
+            <label class="exp-filter-label" for="filterDateFrom">From</label>
+            <input type="date" name="date_from" id="filterDateFrom" class="exp-date-input" value="{{ date_from }}">
+          </div>
+          <span class="exp-date-sep">—</span>
+          <div class="exp-date-field">
+            <label class="exp-filter-label" for="filterDateTo">To</label>
+            <input type="date" name="date_to" id="filterDateTo" class="exp-date-input" value="{{ date_to }}">
           </div>
         </div>
-        <div class="exp-amount-field">
-          <label class="exp-filter-label" for="filterAmtMax">Max Amount</label>
-          <div class="exp-amount-wrap">
-            <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
-            <input type="number" name="amount_max" id="filterAmtMax" class="exp-amount-input" placeholder="∞" value="{{ amount_max }}" min="0" step="0.01">
+
+        <div class="exp-amount-range">
+          <div class="exp-amount-field">
+            <label class="exp-filter-label" for="filterAmtMin">Min Amount</label>
+            <div class="exp-amount-wrap">
+              <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
+              <input type="number" name="amount_min" id="filterAmtMin" class="exp-amount-input" placeholder="0" value="{{ amount_min }}" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="exp-amount-field">
+            <label class="exp-filter-label" for="filterAmtMax">Max Amount</label>
+            <div class="exp-amount-wrap">
+              <span class="exp-currency-sym">{{ DEFAULT_CURRENCY }}</span>
+              <input type="number" name="amount_max" id="filterAmtMax" class="exp-amount-input" placeholder="∞" value="{{ amount_max }}" min="0" step="0.01">
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="exp-filter-actions">
-        <button type="submit" class="exp-btn exp-btn-accent" id="applyFiltersBtn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Apply
-        </button>
-        <a href="{{ url_for('expenses') }}" class="exp-btn exp-btn-ghost" id="resetFiltersBtn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.86"/></svg>
-          Reset
-        </a>
-      </div>
+        <div class="exp-filter-actions">
+          <button type="submit" class="exp-btn exp-btn-accent" id="applyFiltersBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Apply
+          </button>
+          <a href="{{ url_for('expenses') }}" class="exp-btn exp-btn-ghost" id="resetFiltersBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.86"/></svg>
+            Reset
+          </a>
+        </div>
 
+      </div>
     </div>
 
     <!-- Active Filter Chips -->
@@ -577,15 +590,15 @@
 
 /* ── Filter Panel ────────────────────────────── */
 .exp-filter-panel {
-  background:rgba(14,32,51,0.7);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:16px; padding:20px;
+  background:rgba(14,32,51,0.55);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px; padding:12px 16px;
   margin-bottom:20px; backdrop-filter:blur(12px);
   animation:expFadeUp 0.45s ease 0.05s both;
 }
-.exp-filter-row { display:flex; align-items:flex-end; gap:14px; }
-.exp-filter-row--primary  { margin-bottom:14px; }
-.exp-filter-row--secondary { flex-wrap:wrap; }
+.exp-filter-row { display:flex; align-items:center; gap:10px; }
+.exp-filter-row--primary  { margin-bottom:0; flex-wrap:nowrap; }
+.exp-filter-row--secondary { flex-wrap:wrap; align-items:flex-end; gap:12px; }
 .exp-filter-label {
   display:block; font-size:10px; font-weight:600;
   color:rgba(255,255,255,0.4); text-transform:uppercase;
@@ -593,19 +606,19 @@
 }
 
 /* Search */
-.exp-search-wrap { position:relative; flex:1; min-width:220px; }
+.exp-search-wrap { position:relative; flex:1 1 40%; min-width:200px; }
 .exp-search-ico {
   position:absolute; left:12px; top:50%;
   transform:translateY(-50%); color:rgba(255,255,255,0.3); pointer-events:none;
 }
 .exp-search-input {
-  width:100%; height:40px; padding:0 36px 0 38px;
+  width:100%; height:38px; padding:0 32px 0 36px;
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.1);
   border-radius:10px; color:#fff; font-size:13px;
   font-family:var(--font-family); transition:border-color 0.18s, box-shadow 0.18s; outline:none;
 }
-.exp-search-input::placeholder { color:rgba(255,255,255,0.28); }
+.exp-search-input::placeholder { color:rgba(255,255,255,0.35); }
 .exp-search-input:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
 .exp-search-clear {
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
@@ -619,19 +632,45 @@
 .exp-filter-group { display:flex; flex-direction:column; }
 .exp-pill-select-wrap { position:relative; display:inline-flex; align-items:center; }
 .exp-pill-select {
-  height:40px; padding:0 34px 0 13px;
+  height:38px; padding:0 28px 0 11px;
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px; color:#fff; font-size:13px;
+  border-radius:10px; color:#fff; font-size:12.5px;
   font-family:var(--font-family);
   appearance:none; -webkit-appearance:none;
-  cursor:pointer; outline:none; min-width:138px;
+  cursor:pointer; outline:none; min-width:120px; max-width:145px;
   transition:border-color 0.18s, box-shadow 0.18s;
 }
 .exp-pill-select option { background:#0d2540; color:#fff; }
 .exp-pill-select:focus { border-color:rgba(16,185,129,0.45); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
 .exp-select-caret {
-  position:absolute; right:10px; color:rgba(255,255,255,0.32); pointer-events:none;
+  position:absolute; right:9px; color:rgba(255,255,255,0.32); pointer-events:none;
+}
+
+/* Filters toggle button & advanced drawer */
+.exp-filters-toggle-btn {
+  height:38px; padding:0 13px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; color:#fff; font-size:12.5px;
+  font-family:var(--font-family); font-weight:600;
+  display:inline-flex; align-items:center; gap:6px;
+  cursor:pointer; transition:all 0.18s ease; outline:none;
+  white-space:nowrap;
+}
+.exp-filters-toggle-btn:hover,
+.exp-filters-toggle-btn.open,
+.exp-filters-toggle-btn.has-active {
+  background:rgba(16,185,129,0.12);
+  border-color:rgba(16,185,129,0.35);
+  color:#34D399;
+}
+.exp-filter-badge {
+  color:#10B981; font-weight:700; font-size:11px;
+}
+.exp-advanced-filters {
+  margin-top:12px; padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.06);
 }
 
 /* Date range */
@@ -1007,6 +1046,29 @@ document.addEventListener('keydown', function(e) {
 function toggleFilterPanel() {
   const panel = document.getElementById('expFilterPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── Advanced filters drawer toggle ─────────────────── */
+function toggleAdvancedFilters() {
+  const panel = document.getElementById('expAdvancedFilters');
+  const btn = document.getElementById('toggleAdvFiltersBtn');
+  if (!panel) return;
+  const isHidden = (panel.style.display === 'none' || panel.style.display === '');
+  if (isHidden) {
+    panel.style.display = 'block';
+    if (btn) {
+      btn.classList.add('open');
+      const stateSpan = btn.querySelector('.filters-btn-state');
+      if (stateSpan) stateSpan.textContent = '▲';
+    }
+  } else {
+    panel.style.display = 'none';
+    if (btn) {
+      btn.classList.remove('open');
+      const stateSpan = btn.querySelector('.filters-btn-state');
+      if (stateSpan) stateSpan.textContent = '▼';
+    }
+  }
 }
 
 /* ── Live search debounce ─────────────────── */

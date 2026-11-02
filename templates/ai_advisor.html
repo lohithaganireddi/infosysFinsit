@@ -8,7 +8,7 @@
 {% set total_exp = dashboard_data.total_expenses or 0 %}
 {% set port_val = portfolio_data.current_value or 0 %}
 {% set port_inv = portfolio_data.total_invested or 0 %}
-{% set monthly_budget_val = dashboard_data.monthly_budget or 50000 %}
+{% set monthly_budget_val = dashboard_data.monthly_budget or 0 %}
 {% set total_saved = (goals_data.total_saved if goals_data else 6200) %}
 {% set rem_budget = (monthly_budget_val - total_exp) %}
 
@@ -18,27 +18,24 @@
   <div class="exec-hero-banner" style="border-radius:24px;padding:28px 32px;background:linear-gradient(135deg, rgba(14,32,51,0.98), rgba(8,39,37,0.9), rgba(168,85,247,0.18));border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;box-shadow:0 12px 32px rgba(0,0,0,0.3);">
     <div style="flex:1;min-width:300px;">
       <div style="font-size:12px;font-weight:700;color:#34D399;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;"></span> AI Status: Online · Bloomberg-Grade Intelligence Engine
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 8px #34D399;"></span> FinSight Smart Financial Advisor · Gemini AI Engine
       </div>
       <h2 style="font-size:26px;font-weight:800;color:#fff;margin:0 0 8px 0;">
-        Good Morning, {{ user.name.split()[0] if user and user.name else 'Lohitha' }} 👋
+        Welcome, {{ user.name.split()[0] if user and user.name else 'User' }} 👋
       </h2>
       <p style="font-size:13.5px;color:rgba(255,255,255,0.75);margin:0 0 16px 0;max-width:620px;line-height:1.55;">
-        Welcome to your personal AI Financial Workspace. All 14 intelligence modules are synchronized with your real-time SQLite ledger.
+        Personalized insights and transparent financial explanations based directly on your FinSight database ledger.
       </p>
       
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">
-          Grade A (Excellent)
+          Health Rating: {{ score_obj.label }}
         </span>
         <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3);">
-          Risk Rating: Low Risk
-        </span>
-        <span style="padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(168,85,247,0.15);color:#C084FC;border:1px solid rgba(168,85,247,0.3);">
-          Model Confidence: 94.2%
+          Explainable Financial Models
         </span>
         <span style="padding:6px 14px;border-radius:99px;font-size:11.5px;color:rgba(255,255,255,0.45);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
-          Last Analyzed: Just Now
+          Last Analyzed: Live
         </span>
       </div>
     </div>
@@ -54,13 +51,13 @@
     </div>
   </div>
 
-  <!-- ── 2. BLOOMBERG-GRADE EXECUTIVE BRIEFING ── -->
+  <!-- ── 2. EXECUTIVE BRIEFING ── -->
   <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(16,185,129,0.3);box-shadow:0 8px 24px rgba(16,185,129,0.08);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);color:#34D399;display:flex;align-items:center;justify-content:center;font-size:18px;">📊</div>
         <div>
-          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Executive Terminal Synthesis Briefing</h3>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Executive Financial Synthesis</h3>
           <span style="font-size:12px;color:rgba(255,255,255,0.4);">Multi-variable financial status summary</span>
         </div>
       </div>
@@ -93,8 +90,8 @@
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);color:#34D399;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid rgba(16,185,129,0.3);">🤖</div>
         <div>
-          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Conversation Workspace</h3>
-          <span style="font-size:12px;color:rgba(255,255,255,0.4);">ChatGPT-style multi-turn chat with summary, analysis, recommendation & impact</span>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">FinSight Smart Financial Advisor</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Data-grounded financial insights powered by Google Gemini AI</span>
         </div>
       </div>
       <button onclick="clearCopilot()" class="bgt-btn bgt-btn-ghost bgt-btn-sm" style="font-size:11px;">Clear Chat</button>
@@ -114,18 +111,22 @@
       <div class="copilot-msg copilot-msg-ai" style="display:flex;gap:10px;">
         <div class="copilot-ai-icon">✨</div>
         <div class="msg-bubble" style="background:rgba(255,255,255,0.04);padding:14px 18px;border-radius:14px;font-size:13px;color:rgba(255,255,255,0.9);line-height:1.5;max-width:85%;">
-          ### 🤖 Hello {{ user.name.split()[0] if user and user.name else 'Lohitha' }}!
-          **Summary:** I am your FinSight AI Advisor.
-          **Analysis:** All 14 intelligence modules are online and synchronized with your real-time SQLite database.
-          **Recommendation:** Ask me anything about your expenses, portfolio, goals, or health score.
-          **Model Confidence:** 96%
+          ### 💡 Hello {{ user.name.split()[0] if user and user.name else 'User' }}!
+          **Summary:** I am your FinSight Smart Financial Advisor.
+          **Analysis:** I can explain your budget utilization, health score index, portfolio allocation, and goal contribution progress.
+          **Recommendation:** Click a suggested prompt below or type your financial question.
+          *Analysis based on your recorded FinSight database records.*
         </div>
       </div>
     </div>
 
     <div style="display:flex;align-items:center;gap:10px;">
-      <input type="text" id="advCopilotInput" placeholder="Type a prompt for your AI Advisor... (Enter to send)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:12px 16px;border-radius:12px;color:#fff;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAdvCopilot(event); }">
+      <input type="text" id="advCopilotInput" placeholder="Ask a question about your finances... (Press Enter to send)" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:12px 16px;border-radius:12px;color:#fff;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendAdvCopilot(event); }">
       <button id="advCopilotSendBtn" type="button" class="bgt-btn bgt-btn-primary" onclick="sendAdvCopilot(event)" style="padding:12px 20px;">Send Prompt →</button>
+    </div>
+    
+    <div style="font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:10px;display:flex;align-items:center;gap:6px;">
+      <span>ℹ️</span> <span>FinSight provides educational financial insights based on recorded application data. It does not guarantee investment returns, execute transactions, or replace professional financial advice.</span>
     </div>
   </div>
 
@@ -144,40 +145,40 @@
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;">
-      <div onclick="showPredictionModal('Next Month Outflow', '{{ format_currency(predictions.next_month_expenses.value) }}', '92%', 'Based on 30-day daily velocity extrapolation.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+      <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Next Month Outflow</span>
-          <span style="font-size:11px;color:#34D399;font-weight:700;">92% Conf</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Projected Month-End Outflow</span>
+          <span style="font-size:11px;color:#60A5FA;font-weight:700;">Run-Rate</span>
         </div>
         <div style="font-size:20px;font-weight:800;color:#F87171;margin:6px 0;">{{ format_currency(predictions.next_month_expenses.value) }}</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.next_month_expenses.reason }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.next_month_expenses.methodology }}</div>
       </div>
 
-      <div onclick="showPredictionModal('Savings Forecast', '{{ format_currency(predictions.expected_savings.value) }}', '88%', 'Derived from monthly budget minus projected burn rate.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+      <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Savings Forecast</span>
-          <span style="font-size:11px;color:#34D399;font-weight:700;">88% Conf</span>
+          <span style="font-size:11px;color:#34D399;font-weight:700;">Buffer</span>
         </div>
         <div style="font-size:20px;font-weight:800;color:#34D399;margin:6px 0;">{{ format_currency(predictions.expected_savings.value) }}</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.expected_savings.reason }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.expected_savings.methodology }}</div>
       </div>
 
-      <div onclick="showPredictionModal('Overrun Probability', '{{ predictions.overrun_probability.value }}%', '95%', 'Probability model checking category limit breaches.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+      <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Overrun Probability</span>
-          <span style="font-size:11px;color:#FCD34D;font-weight:700;">95% Conf</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Current Daily Burn</span>
+          <span style="font-size:11px;color:#FCD34D;font-weight:700;">Daily Avg</span>
         </div>
-        <div style="font-size:20px;font-weight:800;color:#FCD34D;margin:6px 0;">{{ predictions.overrun_probability.value }}%</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.overrun_probability.reason }}</div>
+        <div style="font-size:20px;font-weight:800;color:#FCD34D;margin:6px 0;">{{ format_currency(predictions.current_daily_burn.value) }}/day</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.current_daily_burn.methodology }}</div>
       </div>
 
-      <div onclick="showPredictionModal('Portfolio Growth', '{{ format_currency(predictions.portfolio_growth_projection.value) }}', '85%', 'Extrapolated based on asset allocation & 10.5% CAGR.')" style="cursor:pointer;padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
+      <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);" class="glass-hover-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Portfolio Growth</span>
-          <span style="font-size:11px;color:#34D399;font-weight:700;">85% Conf</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;font-weight:600;">Portfolio Valuation</span>
+          <span style="font-size:11px;color:#C084FC;font-weight:700;">Assets</span>
         </div>
-        <div style="font-size:20px;font-weight:800;color:#C084FC;margin:6px 0;">{{ format_currency(predictions.portfolio_growth_projection.value) }}</div>
-        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.portfolio_growth_projection.reason }}</div>
+        <div style="font-size:20px;font-weight:800;color:#C084FC;margin:6px 0;">{{ format_currency(predictions.portfolio_current_valuation.value) }}</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ predictions.portfolio_current_valuation.methodology }}</div>
       </div>
     </div>
   </div>
@@ -240,7 +241,7 @@
         <span style="font-size:20px;">📈</span>
         <div>
           <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Investment Advisor Workspace</h3>
-          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Asset allocation, risk meters & CAGR optimization</span>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Asset allocation, concentration risk &amp; rebalancing strategy</span>
         </div>
       </div>
       <span style="font-size:11px;color:#C084FC;background:rgba(168,85,247,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Diversification Score: {{ invest_advisor.diversification_score }}/100</span>
@@ -253,12 +254,12 @@
           <div style="font-size:18px;font-weight:800;color:#60A5FA;margin-top:2px;">{{ invest_advisor.risk_score }}</div>
         </div>
         <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Expected CAGR</div>
-          <div style="font-size:18px;font-weight:800;color:#34D399;margin-top:2px;">{{ invest_advisor.expected_return_pct }}%</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">HHI Concentration Index</div>
+          <div style="font-size:18px;font-weight:800;color:#34D399;margin-top:2px;">{{ invest_advisor.hhi if (invest_advisor and invest_advisor.hhi is defined) else '0.00' }}</div>
         </div>
         <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Volatility Index</div>
-          <div style="font-size:16px;font-weight:700;color:#C084FC;margin-top:2px;">{{ invest_advisor.volatility }}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);">Asset Holding Types</div>
+          <div style="font-size:16px;font-weight:700;color:#C084FC;margin-top:2px;">{{ invest_advisor.asset_allocation|length }} Types</div>
         </div>
       </div>
 
@@ -292,7 +293,7 @@
           <span style="font-size:12px;color:rgba(255,255,255,0.4);">Adjust monthly contribution slider to project completion date in real time</span>
         </div>
       </div>
-      <span style="font-size:11px;color:#34D399;background:rgba(16,185,129,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Prob: {{ goal_optimizer.completion_probability }}%</span>
+      <span style="font-size:11px;color:#34D399;background:rgba(16,185,129,0.1);padding:4px 12px;border-radius:99px;font-weight:700;">Progress: {{ goal_optimizer.progress_pct }}%</span>
     </div>
 
     <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);margin-bottom:16px;">
@@ -305,8 +306,8 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;">
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Completion Probability</div>
-        <div style="font-size:20px;font-weight:800;color:#34D399;margin-top:2px;">{{ goal_optimizer.completion_probability }}%</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Savings Progress</div>
+        <div style="font-size:20px;font-weight:800;color:#34D399;margin-top:2px;">{{ goal_optimizer.progress_pct }}%</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);text-align:center;">
         <div style="font-size:11px;color:rgba(255,255,255,0.4);">Suggested Monthly SIP</div>
@@ -381,8 +382,8 @@
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
         <span style="font-size:20px;">🏆</span>
         <div>
-          <h3 style="font-size:15px;font-weight:700;color:#fff;margin:0;">FinSight Achievements &amp; XP Level</h3>
-          <span style="font-size:11.5px;color:rgba(255,255,255,0.4);">Level 4 Financial Master · 450 XP</span>
+          <h3 style="font-size:15px;font-weight:700;color:#fff;margin:0;">FinSight Milestone Achievements</h3>
+          <span style="font-size:11.5px;color:rgba(255,255,255,0.4);">Milestone badges evaluated against your activity</span>
         </div>
       </div>
 
@@ -399,23 +400,23 @@
   </div>
   {% endif %}
 
-  <!-- ── 11. AI SMART RECEIPT SCANNER WORKFLOW ── -->
+  <!-- ── 11. RECEIPT SCANNER (FUTURE RELEASE) ── -->
   <div class="mock-card glass-hover-card" style="border-radius:22px;padding:26px;background:rgba(14,32,51,0.85);border:1px solid rgba(255,255,255,0.08);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:20px;">🧾</span>
         <div>
-          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">AI Smart Receipt Scanner Workflow</h3>
-          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Upload invoice image → OCR field extraction → Auto-fill expense form</span>
+          <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0;">Receipt Scanning — Coming Soon</h3>
+          <span style="font-size:12px;color:rgba(255,255,255,0.4);">Automated OCR receipt scanning is coming soon. Please enter your expenses manually.</span>
         </div>
       </div>
+      <a href="{{ url_for('expenses') }}" class="bgt-btn bgt-btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+        <span>📝</span> Log Expenses Manually
+      </a>
     </div>
 
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <button onclick="scanReceiptMock()" class="bgt-btn bgt-btn-primary" style="display:inline-flex;align-items:center;gap:8px;">
-        <span>📸</span> Upload &amp; Scan Receipt
-      </button>
-      <span id="scanStatusText" style="font-size:12.5px;color:rgba(255,255,255,0.6);">Click to test AI receipt extraction model</span>
+    <div style="padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);font-size:12px;color:rgba(255,255,255,0.6);">
+      ℹ️ Automated OCR vision extraction is planned for a future update. All manual expense logging remains fully supported and synchronized across dashboards and reports.
     </div>
   </div>
 
@@ -526,7 +527,7 @@ function toggleBudgetOptimizationDrawer() {
 }
 
 function acceptBudgetOptimization() {
-  alert('Optimized budget settings accepted! Saved ₹2,400/mo.');
+  alert('Optimized budget settings applied successfully.');
   toggleBudgetOptimizationDrawer();
 }
 
@@ -535,7 +536,13 @@ function updateGoalTimeline(val) {
   if(lbl) lbl.textContent = '₹' + parseInt(val).toLocaleString('en-IN');
   const comp = document.getElementById('goalCompletionLabel');
   if(comp) {
-    comp.textContent = val >= 10000 ? 'Oct 2026' : val >= 5000 ? 'Nov 2026' : 'Dec 2026';
+    const monthlySip = parseFloat(val) || 1;
+    const targetRem = {{ goal_optimizer.remaining_amount if (goal_optimizer and goal_optimizer.remaining_amount is defined) else 100000 }};
+    const monthsNeeded = Math.max(1, Math.ceil(targetRem / monthlySip));
+    const now = new Date();
+    const futureDate = new Date(now.getFullYear(), now.getMonth() + monthsNeeded, 1);
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    comp.textContent = monthNames[futureDate.getMonth()] + ' ' + futureDate.getFullYear();
   }
 }
 
@@ -554,15 +561,17 @@ function closePredictionModal() {
 
 function scanReceiptMock() {
   const status = document.getElementById('scanStatusText');
-  status.textContent = 'Scanning receipt...';
+  if (status) status.textContent = 'Checking receipt scanner status...';
   fetch('/api/scan-receipt', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOK}
-  }).then(r=>r.json()).then(d=>{
-    if(d.success) {
-      status.innerHTML = `✅ Extracted: <strong>${d.merchant}</strong> · Amount: <strong>₹${d.amount}</strong> · Cat: <strong>${d.category}</strong>`;
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOK }
+  }).then(r => r.json()).then(d => {
+    if (status) {
+      status.innerHTML = `ℹ️ ${d.message || 'Receipt scanning is coming soon. Please enter the expense manually.'}`;
     }
-  }).catch(()=>{ status.textContent = 'Error scanning receipt.'; });
+  }).catch(() => {
+    if (status) status.textContent = 'Receipt scanning is coming soon. Please enter the expense manually.';
+  });
 }
 </script>
 {% endblock %}

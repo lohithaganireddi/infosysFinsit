@@ -288,12 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const goalData = {{ goals_data | tojson }};
   const scoreObj = {{ health_score_detailed | tojson }};
 
-  const labels = (dashData && dashData.monthly_expenses_labels && dashData.monthly_expenses_labels.length) 
-    ? dashData.monthly_expenses_labels 
-    : ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-  const values = (dashData && dashData.monthly_expenses_values && dashData.monthly_expenses_values.length) 
-    ? dashData.monthly_expenses_values 
-    : [12000, 15000, 11000, 18000, 14000, dashData ? (dashData.total_expenses || 16000) : 16000];
+  const analyticsHist = {{ analytics_history | tojson if analytics_history else '{}' }};
+  const expHist = (analyticsHist && analyticsHist.expense_history && analyticsHist.expense_history.length) ? analyticsHist.expense_history : [];
+  const contribHist = (analyticsHist && analyticsHist.contrib_history && analyticsHist.contrib_history.length) ? analyticsHist.contrib_history : [];
+  const invBreakdown = (analyticsHist && analyticsHist.investment_breakdown && analyticsHist.investment_breakdown.length) ? analyticsHist.investment_breakdown : [];
+
+  const labels = expHist.length ? expHist.map(h => h.month) : [currentMonth];
+  const values = expHist.length ? expHist.map(h => h.total) : [dashData ? (dashData.total_expenses || 0) : 0];
 
   // 1. EXPENSE TREND CHART
   const trendEl = document.getElementById('analyticsTrendChart');
@@ -334,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. BUDGET VS ACTUAL CHART
   const bvaEl = document.getElementById('budgetVsActualChart');
   if (bvaEl) {
-    const budgetVal = (dashData && dashData.monthly_budget) ? dashData.monthly_budget : 50000;
+    const budgetVal = (dashData && dashData.monthly_budget) ? dashData.monthly_budget : 0;
     new Chart(bvaEl.getContext('2d'), {
       type: 'bar',
       data: {
@@ -360,8 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const catEl = document.getElementById('analyticsCatChart');
   const catData = (dashData && dashData.category_breakdown) ? dashData.category_breakdown : [];
   if (catEl) {
-    const catLabels = catData.length ? catData.map(c => c.category) : ['Housing', 'Food', 'Transport', 'Utilities', 'Entertainment'];
-    const catValues = catData.length ? catData.map(c => c.amount) : [15000, 8000, 4500, 3000, 2500];
+    const catLabels = catData.length ? catData.map(c => c.category) : ['No Expenses Logged'];
+    const catValues = catData.length ? catData.map(c => c.amount) : [0];
     const colors = ['#10B981','#3B82F6','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#F97316'];
 
     new Chart(catEl.getContext('2d'), {
@@ -385,8 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4. MONTHLY COMPARISON (MOM VARIANCE)
   const momEl = document.getElementById('monthlyComparisonChart');
   if (momEl) {
-    const prevVal = (finIntel && finIntel.prev_monthly_spending) ? finIntel.prev_monthly_spending : 24000;
-    const currVal = (finIntel && finIntel.monthly_spending) ? finIntel.monthly_spending : (dashData ? (dashData.total_expenses || 28000) : 28000);
+    const prevVal = (finIntel && finIntel.prev_monthly_spending) ? finIntel.prev_monthly_spending : 0;
+    const currVal = (finIntel && finIntel.monthly_spending) ? finIntel.monthly_spending : (dashData ? (dashData.total_expenses || 0) : 0);
     new Chart(momEl.getContext('2d'), {
       type: 'bar',
       data: {
@@ -414,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. FINANCIAL HEALTH GAUGE (SEMI-DOUGHNUT)
   const gaugeEl = document.getElementById('healthScoreGauge');
   if (gaugeEl) {
-    const score = (scoreObj && scoreObj.score) ? scoreObj.score : 85;
+    const score = (scoreObj && scoreObj.score) ? scoreObj.score : 0;
     const color = (scoreObj && scoreObj.color) ? scoreObj.color : '#10B981';
     new Chart(gaugeEl.getContext('2d'), {
       type: 'doughnut',
@@ -437,17 +438,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 6. SAVINGS TREND
+  // 6. SAVINGS / GOAL CONTRIBUTION TREND
   const savingsEl = document.getElementById('savingsTrendChart');
   if (savingsEl) {
-    const savedTot = (goalData && goalData.total_saved) ? goalData.total_saved : 45000;
+    const cLabels = contribHist.length ? contribHist.map(c => c.month) : ['No Contributions Logged'];
+    const cValues = contribHist.length ? contribHist.map(c => c.total) : [goalData ? (goalData.total_saved || 0) : 0];
     new Chart(savingsEl.getContext('2d'), {
       type: 'line',
       data: {
-        labels: labels,
+        labels: cLabels,
         datasets: [{
-          label: 'Savings',
-          data: [savedTot * 0.3, savedTot * 0.45, savedTot * 0.6, savedTot * 0.75, savedTot * 0.9, savedTot],
+          label: 'Contributions',
+          data: cValues,
           borderColor: '#34D399',
           borderWidth: 2,
           fill: false,
@@ -466,24 +468,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 7. INVESTMENT GROWTH CHART
+  // 7. INVESTMENT HOLDINGS BREAKDOWN CHART
   const invGrowthEl = document.getElementById('investmentGrowthChart');
   if (invGrowthEl) {
-    const invTot = (portData && portData.total_invested) ? portData.total_invested : 35000;
-    const invVal = (portData && portData.current_value) ? portData.current_value : 42000;
+    const iLabels = invBreakdown.length ? invBreakdown.map(i => i.type) : ['No Investments Logged'];
+    const iInvested = invBreakdown.length ? invBreakdown.map(i => i.invested) : [portData ? (portData.total_invested || 0) : 0];
+    const iCurrent = invBreakdown.length ? invBreakdown.map(i => i.current) : [portData ? (portData.current_value || 0) : 0];
+
     new Chart(invGrowthEl.getContext('2d'), {
-      type: 'line',
+      type: 'bar',
       data: {
-        labels: labels,
+        labels: iLabels,
         datasets: [
-          { label: 'Valuation', data: [invVal*0.4, invVal*0.55, invVal*0.7, invVal*0.82, invVal*0.92, invVal], borderColor: '#818CF8', borderWidth: 2, tension: 0.3 },
-          { label: 'Capital', data: [invTot*0.4, invTot*0.55, invTot*0.7, invTot*0.8, invTot*0.9, invTot], borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1.5, borderDash: [4,4], tension: 0.3 }
+          { label: 'Current Valuation', data: iCurrent, backgroundColor: 'rgba(129, 140, 248, 0.85)', borderRadius: 6 },
+          { label: 'Invested Capital', data: iInvested, backgroundColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 6 }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { position: 'top', labels: { color: 'rgba(255,255,255,0.7)', font: { family: 'Inter', size: 10 } } } },
         scales: {
           x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'Inter', size: 10 } } },
           y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'Inter', size: 10 } } }
@@ -495,8 +499,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 8. GOAL PROGRESS CHART
   const goalChartEl = document.getElementById('goalProgressChart');
   if (goalChartEl) {
-    const saved = (goalData && goalData.total_saved) ? goalData.total_saved : 25000;
-    const target = (goalData && goalData.total_target) ? goalData.total_target : 100000;
+    const saved = (goalData && goalData.total_saved) ? goalData.total_saved : 0;
+    const target = (goalData && goalData.total_target) ? goalData.total_target : 0;
     new Chart(goalChartEl.getContext('2d'), {
       type: 'bar',
       data: {
@@ -517,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
 });
 </script>
 {% endblock %}

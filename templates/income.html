@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Income Ledger | FinSight – Personal Finance & Investment Intelligence{% endblock %}
+{% block header_title %}Income Ledger{% endblock %}
+{% block header_description %}Track and manage all your cash inflows and income streams.{% endblock %}
+
+{% block header_action %}
+<div class="exp-header-actions">
+  <button type="button" class="exp-btn exp-btn-primary" onclick="openAddIncomeModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Add Income
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── KPI CASH FLOW SUMMARY ── -->
+<div class="exp-kpi-grid">
+
+  <div class="exp-kpi-card">
+    <div class="exp-kpi-icon exp-kpi-icon--emerald">
+      💵
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Total Monthly Income</span>
+      <span class="exp-kpi-value">{{ format_currency(cash_flow.total_income) }}</span>
+      <span class="exp-kpi-meta">Logged inflows this month</span>
+    </div>
+  </div>
+
+  <div class="exp-kpi-card">
+    <div class="exp-kpi-icon exp-kpi-icon--red">
+      💳
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Total Monthly Outflow</span>
+      <span class="exp-kpi-value">{{ format_currency(cash_flow.total_expenses) }}</span>
+      <span class="exp-kpi-meta">Logged expenditure</span>
+    </div>
+  </div>
+
+  <div class="exp-kpi-card">
+    <div class="exp-kpi-icon exp-kpi-icon--blue">
+      📊
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Net Cash Flow</span>
+      <span class="exp-kpi-value" style="color: {% if cash_flow.net_cash_flow >= 0 %}#34D399{% else %}#F87171{% endif %};">
+        {{ format_currency(cash_flow.net_cash_flow) }}
+      </span>
+      <span class="exp-kpi-meta">Income minus expenses</span>
+    </div>
+  </div>
+
+  <div class="exp-kpi-card">
+    <div class="exp-kpi-icon exp-kpi-icon--amber">
+      📈
+    </div>
+    <div class="exp-kpi-body">
+      <span class="exp-kpi-label">Savings Rate</span>
+      <span class="exp-kpi-value">{{ cash_flow.savings_rate }}%</span>
+      <span class="exp-kpi-meta">Net cash flow ratio</span>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── INCOME TRANSACTIONS TABLE ── -->
+<div class="exp-table-card">
+  <div class="exp-table-topbar">
+    <div>
+      <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0 0 2px 0;">Income Records</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin:0;">Logged cash inflows for period: {{ month_key }}</p>
+    </div>
+  </div>
+
+  {% if incomes %}
+  <div class="exp-table-scroll">
+    <table class="exp-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Category</th>
+          <th>Notes</th>
+          <th style="text-align:right;">Amount</th>
+          <th style="text-align:center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inc in incomes %}
+        <tr>
+          <td>{{ inc.income_date }}</td>
+          <td style="font-weight:600;color:#fff;">{{ inc.source }}</td>
+          <td><span class="exp-cat-badge">{{ inc.category }}</span></td>
+          <td style="color:rgba(255,255,255,0.5);">{{ inc.notes or '—' }}</td>
+          <td style="text-align:right;font-weight:700;color:#34D399;">+{{ format_currency(inc.amount) }}</td>
+          <td style="text-align:center;">
+            <form method="POST" action="{{ url_for('remove_income', income_id=inc.id) }}" onsubmit="return confirm('Delete this income record?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="exp-btn exp-btn-ghost" style="padding:4px 8px;color:#F87171;font-size:11px;">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);font-size:13px;">
+    No income entries logged for this period. Click <strong>Add Income</strong> to record your cash inflow.
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ── ADD INCOME MODAL ── -->
+<div id="addIncomeModal" class="exp-modal-overlay" style="display:none;">
+  <div class="exp-modal-card">
+    <div class="exp-modal-head">
+      <h3 class="exp-modal-heading">Record New Income</h3>
+      <button type="button" class="exp-modal-x" onclick="closeAddIncomeModal()">×</button>
+    </div>
+    <form method="POST" action="{{ url_for('create_income') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      
+      <div style="margin-bottom:14px;">
+        <label class="exp-filter-label" for="incSource">Source / Employer</label>
+        <input type="text" name="source" id="incSource" class="exp-search-input" placeholder="e.g. Monthly Salary, Freelance" required>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label class="exp-filter-label" for="incCategory">Category</label>
+        <select name="category" id="incCategory" class="exp-date-input" style="width:100%;">
+          <option value="Salary">Salary</option>
+          <option value="Freelance">Freelance</option>
+          <option value="Business">Business</option>
+          <option value="Investment Returns">Investment Returns</option>
+          <option value="Rental">Rental</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label class="exp-filter-label" for="incAmount">Amount ({{ DEFAULT_CURRENCY }})</label>
+        <input type="number" name="amount" id="incAmount" class="exp-search-input" placeholder="0.00" min="0.01" step="0.01" required>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label class="exp-filter-label" for="incDate">Date</label>
+        <input type="date" name="income_date" id="incDate" class="exp-date-input" style="width:100%;" required>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label class="exp-filter-label" for="incNotes">Notes (Optional)</label>
+        <input type="text" name="notes" id="incNotes" class="exp-search-input" placeholder="Additional details">
+      </div>
+
+      <div class="exp-modal-foot">
+        <button type="button" class="exp-btn exp-btn-ghost" onclick="closeAddIncomeModal()">Cancel</button>
+        <button type="submit" class="exp-btn exp-btn-accent">Save Income</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAddIncomeModal() {
+  document.getElementById('addIncomeModal').style.display = 'flex';
+  document.getElementById('incDate').valueAsDate = new Date();
+}
+function closeAddIncomeModal() {
+  document.getElementById('addIncomeModal').style.display = 'none';
+}
+</script>
+
+<style>
+.exp-modal-overlay {
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.exp-modal-card {
+  background:#0e2033;border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:24px;width:100%;max-width:440px;color:#fff;
+}
+.exp-cat-badge {
+  background:rgba(16,185,129,0.12);color:#34D399;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;
+}
+</style>
+
+{% endblock %}

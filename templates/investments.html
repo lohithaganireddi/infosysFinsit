@@ -190,9 +190,10 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       </div>
       <div style="min-width:0;flex:1;">
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Est. Annual Return</div>
-        <div style="font-size:16px;font-weight:700;color:#818CF8;margin-top:2px;">11.8% CAGR</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Based on asset mix</div>
+        {% set port_roi = (((portfolio.current_value - portfolio.total_invested) / portfolio.total_invested) * 100) if (portfolio and portfolio.total_invested > 0) else 0.0 %}
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Overall Portfolio Return</div>
+        <div style="font-size:16px;font-weight:700;color:#818CF8;margin-top:2px;">{{ '+' if port_roi >= 0 else '' }}{{ port_roi | round(1) }}% ROI</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Unrealized return on invested capital</div>
       </div>
     </div>
 
@@ -529,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
         datasets: [{
           label: 'Capital Added',
-          data: typeData.length ? [15000, 20000, 12000, 25000, 18000, {{ portfolio.total_invested or 30000 }}] : [0,0,0,0,0,0],
+          data: typeData.length ? [0, 0, 0, 0, 0, {{ portfolio.total_invested or 0 }}] : [0,0,0,0,0,0],
           backgroundColor: 'rgba(16, 185, 129, 0.7)',
           borderRadius: 6,
         }]

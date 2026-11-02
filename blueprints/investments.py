@@ -72,6 +72,7 @@ def _validate_investment(form):
 
 # ── LIST / PORTFOLIO DASHBOARD ──────────────────────────────────────────────
 
+@investments_bp.route('/investments')
 @investments_bp.route('/investments/')
 @login_required
 def investment_list():

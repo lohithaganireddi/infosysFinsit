@@ -63,6 +63,10 @@
             <div class="dash-header-title">
               <h1>{% block header_title %}Dashboard{% endblock %}</h1>
               {% block header_description_inline %}{% endblock %}
+              {% set desc_content %}{% block header_description %}{% endblock %}{% endset %}
+              {% if desc_content|trim %}
+                <p style="font-size:12px;color:var(--secondary-text);opacity:0.65;margin:3px 0 0 0;">{{ desc_content|trim }}</p>
+              {% endif %}
             </div>
           </div>
 
@@ -84,7 +88,7 @@
             <!-- Theme Toggle -->
             <button class="header-icon-btn theme-toggle-btn" title="Toggle theme" aria-label="Toggle theme">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="12" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             </button>
 
@@ -103,7 +107,7 @@
             </a>
 
             <!-- User profile dropdown trigger -->
-            <div class="header-user-dropdown">
+            <div class="header-user-dropdown" id="headerUserDropdown" role="button" tabindex="0" aria-label="User account menu" aria-haspopup="true" aria-expanded="false" style="position:relative;">
               <div class="header-user-avatar" aria-hidden="true">
                 {% if user and user.profile_image %}
                   <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}" alt="{{ user.name }}" loading="lazy">
@@ -115,6 +119,30 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-chevron" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
+
+              <!-- Dropdown Menu -->
+              <div class="header-user-menu" id="headerUserMenu" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:210px;background:#0A1929;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,0.5);padding:8px;z-index:1000;" role="menu">
+                <div style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:6px;">
+                  <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ user.name if user and user.name else 'User' }}</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ user.email if user and user.email else '' }}</div>
+                </div>
+                <a href="{{ url_for('profile') }}" class="user-menu-item" style="display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:12.5px;color:rgba(255,255,255,0.8);text-decoration:none;border-radius:8px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Profile
+                </a>
+                <a href="{{ url_for('settings') }}" class="user-menu-item" style="display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:12.5px;color:rgba(255,255,255,0.8);text-decoration:none;border-radius:8px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='transparent'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  Settings
+                </a>
+                <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
+                <form method="POST" action="{{ url_for('logout') }}" style="margin:0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;font-size:12.5px;color:#F87171;background:none;border:none;border-radius:8px;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign Out
+                  </button>
+                </form>
+              </div>
             </div>
 
           </div>

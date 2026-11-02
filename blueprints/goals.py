@@ -71,6 +71,7 @@ def _validate_goal(form):
 
 # ── LIST / GOALS DASHBOARD ───────────────────────────────────────────────────
 
+@goals_bp.route('/goals')
 @goals_bp.route('/goals/')
 @login_required
 def goal_list():
@@ -234,3 +235,36 @@ def delete_goal(goal_id):
         flash('Failed to delete goal. Please try again.', 'error')
 
     return redirect(url_for('goals.goal_list'))
+
+
+# ── ADD GOAL CONTRIBUTION ───────────────────────────────────────────────────
+
+@goals_bp.route('/goals/<int:goal_id>/contribute', methods=['POST'])
+@login_required
+def add_contribution(goal_id):
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    amount_str = request.form.get('amount', '')
+    contribution_date = request.form.get('contribution_date', datetime.now().strftime('%Y-%m-%d'))
+    note = sanitize_input(request.form.get('note', ''))
+
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            flash('Contribution amount must be greater than zero.', 'error')
+            return redirect(url_for('goals.goal_list'))
+    except (ValueError, TypeError):
+        flash('Enter a valid contribution amount.', 'error')
+        return redirect(url_for('goals.goal_list'))
+
+    from services import add_goal_contribution
+    success = add_goal_contribution(user['id'], goal_id, amount, contribution_date, note)
+    if success:
+        flash('Goal contribution recorded successfully.', 'success')
+    else:
+        flash('Goal not found or access denied.', 'error')
+
+    return redirect(url_for('goals.goal_list'))
+

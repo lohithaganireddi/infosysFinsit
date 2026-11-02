@@ -4,7 +4,7 @@ import os
 import re
 import secrets
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from io import StringIO
 
@@ -13,8 +13,15 @@ from flask import (Flask, render_template, request, redirect,
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-from database import get_db, init_db, close_db
+from database import get_db, init_db, close_db, IntegrityError
 from services import (
+    add_income,
+    get_user_income,
+    delete_income,
+    calculate_total_income,
+    calculate_cash_flow_metrics,
+    add_goal_contribution,
+    get_goal_contributions,
     calculate_dashboard_metrics,
     calculate_smart_insights,
     calculate_total_expenses,
@@ -44,6 +51,7 @@ from services import (
     calculate_reports_analytics,
     generate_pdf_report_bytes,
     generate_excel_report_bytes,
+    calculate_analytics_history,
 )
 from blueprints.investments import investments_bp
 from blueprints.goals import goals_bp
@@ -52,13 +60,28 @@ from blueprints.goals import goals_bp
 # Application Configuration
 # ==========================================================================
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
+
+# Mandatory SECRET_KEY enforcement in production
+raw_secret = os.environ.get('SECRET_KEY')
+if not raw_secret:
+    if os.environ.get('FLASK_ENV') == 'production':
+        raise RuntimeError(
+            "CRITICAL SECURITY CONFIGURATION ERROR: The 'SECRET_KEY' environment variable is mandatory in production mode. "
+            "Do not run production without a secure, persistent secret key."
+        )
+    # In local development only, safely fallback to an ephemeral key with clear debug notice
+    app.secret_key = secrets.token_hex(32)
+else:
+    app.secret_key = raw_secret
 
 DEFAULT_CURRENCY = '₹'
 
 # Session Cookie Security Settings
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# Enable Secure cookies under HTTPS or when explicitly configured for production
+is_prod = os.environ.get('FLASK_ENV') == 'production' or os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('true', '1')
+app.config['SESSION_COOKIE_SECURE'] = is_prod
 
 # File Upload Settings
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
@@ -164,15 +187,25 @@ def inject_app_context():
     user_val = g.user if hasattr(g, 'user') else None
     unread_count = get_unread_notification_count(user_val['id']) if user_val else 0
 
+    curr_sym = DEFAULT_CURRENCY
+    if user_val and 'currency' in user_val.keys() and user_val['currency']:
+        curr_sym = user_val['currency']
+    elif 'DEFAULT_CURRENCY' in session:
+        curr_sym = session['DEFAULT_CURRENCY']
+
+    def bound_format_currency(amount, currency_symbol=None, decimal_places=2):
+        return format_currency(amount, currency_symbol or curr_sym, decimal_places)
+
     return {
         'csrf_token': session['csrf_token'],
-        'DEFAULT_CURRENCY': session.get('DEFAULT_CURRENCY', DEFAULT_CURRENCY),
-        'format_currency': format_currency,
+        'DEFAULT_CURRENCY': curr_sym,
+        'format_currency': bound_format_currency,
         'user': user_val,
         'build_page_link': build_page_link,
         'has_reports_route': True,
         'unread_notification_count': unread_count,
     }
+
 
 # ==========================================================================
 # Authentication Middleware — @login_required Decorator
@@ -299,6 +332,22 @@ EXPENSE_SORT_CLAUSES = {
     'amount_desc': 'amount DESC, expense_date DESC',
 }
 
+AUTH_RATE_LIMITS = {}  # ip -> (count, reset_timestamp)
+
+def check_auth_rate_limit(ip, max_attempts=5, window_seconds=300):
+    now = datetime.now().timestamp()
+    if ip in AUTH_RATE_LIMITS:
+        count, reset_time = AUTH_RATE_LIMITS[ip]
+        if now < reset_time:
+            if count >= max_attempts:
+                return False
+            AUTH_RATE_LIMITS[ip] = (count + 1, reset_time)
+        else:
+            AUTH_RATE_LIMITS[ip] = (1, now + window_seconds)
+    else:
+        AUTH_RATE_LIMITS[ip] = (1, now + window_seconds)
+    return True
+
 # --- Root / Landing Page ---
 @app.route('/')
 def index():
@@ -315,6 +364,13 @@ def login():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
+        if not check_auth_rate_limit(request.remote_addr, max_attempts=10, window_seconds=300):
+            app.logger.warning(f"Rate limit exceeded for auth attempt from IP: {request.remote_addr}")
+            if request.headers.get('Content-Type') == 'application/json':
+                return {"success": False, "message": "Too many login attempts. Please wait 5 minutes and try again."}, 429
+            flash('Too many login attempts. Please wait 5 minutes and try again.', 'error')
+            return render_template('login.html')
+
         is_json = request.headers.get('Content-Type') == 'application/json'
         
         if is_json:
@@ -525,10 +581,11 @@ def forgot_password():
         reset_link = None
         if user:
             reset_token = secrets.token_urlsafe(32)
+            expires_at = (datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
             try:
                 db.execute(
-                    'UPDATE users SET reset_token = ?, updated_at = ? WHERE id = ?',
-                    (reset_token, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['id'])
+                    'UPDATE users SET reset_token = ?, reset_token_expires = ?, updated_at = ? WHERE id = ?',
+                    (reset_token, expires_at, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['id'])
                 )
                 db.commit()
                 reset_link = url_for('reset_password', token=reset_token, _external=True)
@@ -552,8 +609,10 @@ def forgot_password():
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     db = get_db()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     user = db.execute(
-        'SELECT * FROM users WHERE reset_token = ?', (token,)
+        'SELECT * FROM users WHERE reset_token = ? AND (reset_token_expires IS NULL OR reset_token_expires >= ?)',
+        (token, now_str)
     ).fetchone()
 
     if not user:
@@ -803,7 +862,7 @@ def create_budget():
             app.logger.info(f"User {user['id']} successfully created budget for {month} {year_int} (Category: {category})")
             flash('Budget created successfully.', 'success')
             return redirect(url_for('budgets'))
-        except sqlite3.IntegrityError as ie:
+        except IntegrityError as ie:
             app.logger.warning(f"IntegrityError in budget creation for user {user['id']}: {str(ie)}")
             flash('A budget for that month/year/category combination already exists.', 'error')
         except Exception as e:
@@ -902,7 +961,7 @@ def edit_budget(budget_id):
             app.logger.info(f"User {user['id']} successfully updated budget {budget_id}")
             flash('Budget updated successfully.', 'success')
             return redirect(url_for('budgets'))
-        except sqlite3.IntegrityError as ie:
+        except IntegrityError as ie:
             app.logger.warning(f"IntegrityError in budget update for user {user['id']}: {str(ie)}")
             flash('A budget for that month/year/category combination already exists.', 'error')
         except Exception as e:
@@ -1282,6 +1341,7 @@ def analytics():
         goals_data             = calculate_goals_summary(user['id'])
         health_score_detailed  = calculate_health_score_detailed(user['id'])
         budget_recommendations = generate_budget_recommendations(user['id'], format_currency)
+        analytics_history      = calculate_analytics_history(user['id'])
         app.logger.info(f"User {user['id']} accessed analytics page for {month_key}")
         return render_template(
             'analytics.html',
@@ -1294,7 +1354,9 @@ def analytics():
             goals_data=goals_data,
             health_score_detailed=health_score_detailed,
             budget_recommendations=budget_recommendations,
+            analytics_history=analytics_history,
         )
+
     except Exception as e:
         app.logger.error(f"Error generating analytics for user {user['id']}: {str(e)}", exc_info=True)
         flash('Failed to load analytics. Please try again.', 'error')
@@ -1476,13 +1538,40 @@ def settings():
     if not user:
         return redirect(url_for('login'))
 
+    db = get_db()
     if request.method == 'POST':
         curr_symbol = request.form.get('currency_symbol', '₹')
+        notif_b = 1 if request.form.get('notif_budget') == 'on' else 0
+        notif_s = 1 if request.form.get('notif_security') == 'on' else 0
+        notif_p = 1 if request.form.get('notif_investment') == 'on' else 0
         session['DEFAULT_CURRENCY'] = curr_symbol
-        flash('Platform preferences saved successfully.', 'success')
+        try:
+            db.execute(
+                '''INSERT INTO user_preferences (user_id, currency, notify_budget_alert, notify_high_expense, notify_portfolio_alert)
+                   VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(user_id) DO UPDATE SET
+                     currency = excluded.currency,
+                     notify_budget_alert = excluded.notify_budget_alert,
+                     notify_high_expense = excluded.notify_high_expense,
+                     notify_portfolio_alert = excluded.notify_portfolio_alert''',
+                (user['id'], curr_symbol, notif_b, notif_s, notif_p)
+            )
+            db.execute('UPDATE users SET currency = ? WHERE id = ?', (curr_symbol, user['id']))
+            db.commit()
+            flash('Platform preferences saved successfully.', 'success')
+        except Exception as e:
+            app.logger.error(f"Failed saving settings for user {user['id']}: {str(e)}", exc_info=True)
+            flash('Failed to save settings. Please try again.', 'error')
         return redirect(url_for('settings'))
 
-    return render_template('settings.html', user=user)
+    pref = db.execute("SELECT * FROM user_preferences WHERE user_id = ?", (user['id'],)).fetchone()
+    current_currency = pref['currency'] if (pref and pref['currency']) else (user['currency'] if ('currency' in user.keys() and user['currency']) else '₹')
+    user_pref = dict(pref) if pref else {'notify_budget_alert': 1, 'notify_high_expense': 1, 'notify_portfolio_alert': 1}
+
+    return render_template('settings.html', user=user, current_currency=current_currency, user_pref=user_pref)
+
+
+
 
 
 @app.route('/expenses/new', methods=['GET', 'POST'])
@@ -1549,7 +1638,7 @@ def create_expense():
             app.logger.info(f"User {user['id']} successfully created expense of {amount_value} in category {category}")
             flash('Expense added successfully.', 'success')
             return redirect(url_for('expenses'))
-        except sqlite3.IntegrityError as ie:
+        except IntegrityError as ie:
             app.logger.warning(f"IntegrityError in expense creation for user {user['id']}: {str(ie)}")
             flash('Failed to save expense due to database integrity constraints.', 'error')
         except Exception as e:
@@ -1650,7 +1739,7 @@ def edit_expense(expense_id):
             app.logger.info(f"User {user['id']} successfully updated expense {expense_id} to amount {amount_value}")
             flash('Expense updated successfully.', 'success')
             return redirect(url_for('expenses'))
-        except sqlite3.IntegrityError as ie:
+        except IntegrityError as ie:
             app.logger.warning(f"IntegrityError in expense update for user {user['id']}: {str(ie)}")
             flash('Failed to update expense due to database integrity constraints.', 'error')
         except Exception as e:
@@ -1696,6 +1785,75 @@ def delete_expense(expense_id):
 
     return redirect(url_for('expenses'))
 
+# --- Income Ledger ---
+@app.route('/income')
+@login_required
+def income_list():
+    user = get_current_user()
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+
+    incomes = get_user_income(user['id'])
+    cash_flow = calculate_cash_flow_metrics(user['id'])
+
+    return render_template(
+        'income.html',
+        user=user,
+        incomes=incomes,
+        cash_flow=cash_flow
+    )
+
+
+@app.route('/income/add', methods=['POST'])
+@login_required
+def create_income():
+    user = get_current_user()
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+
+    source = sanitize_input(request.form.get('source', ''))
+    amount_str = request.form.get('amount', '')
+    frequency = sanitize_input(request.form.get('frequency', 'Monthly'))
+    date_received = request.form.get('date_received', datetime.now().strftime('%Y-%m-%d'))
+    category = sanitize_input(request.form.get('category', 'Salary'))
+    notes = sanitize_input(request.form.get('notes', ''))
+
+    errors = []
+    if not source:
+        errors.append('Income source name is required.')
+    try:
+        amount = float(amount_str)
+        if amount <= 0:
+            errors.append('Amount must be greater than zero.')
+    except (ValueError, TypeError):
+        errors.append('Enter a valid numeric amount.')
+
+    if errors:
+        for error in errors:
+            flash(error, 'error')
+        return redirect(url_for('income_list'))
+
+    add_income(user['id'], source, amount, date_received, category, notes)
+    flash('Income entry added successfully.', 'success')
+    return redirect(url_for('income_list'))
+
+
+@app.route('/income/<int:income_id>/delete', methods=['POST'])
+@login_required
+def remove_income(income_id):
+    user = get_current_user()
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+
+    delete_income(user['id'], income_id)
+    flash('Income entry deleted successfully.', 'success')
+    return redirect(url_for('income_list'))
+
+
+
 # --- Logout ---
 @app.route('/logout', methods=['POST'])
 @login_required
@@ -1711,6 +1869,8 @@ def logout():
 # Phase 1 & Phase 3 — AI Financial Copilot & What-If Simulator APIs
 # ==========================================================================
 
+from ai_service import build_financial_context, call_gemini
+
 @app.route('/api/copilot', methods=['POST'])
 @login_required
 def api_copilot():
@@ -1719,100 +1879,42 @@ def api_copilot():
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
     
     req_data = request.get_json() or {}
-    query = sanitize_input(req_data.get('query', '').strip().lower())
-    history = req_data.get('history', [])
+    query = sanitize_input(req_data.get('query', '').strip())
+    raw_history = req_data.get('history', [])
     
-    intel = calculate_financial_intelligence(user['id'])
-    health = calculate_health_score_detailed(user['id'])
-    portfolio = calculate_portfolio_metrics(user['id'])
-    goals = calculate_goals_summary(user['id'])
-    
-    # Infer topic from query or recent history for follow-up questions ("tell me more", "how do I fix that?", "explain")
-    last_user_query = ""
-    for msg in reversed(history):
-        if msg.get('role') == 'user':
-            last_user_query = msg.get('text', '').lower()
-            break
-            
-    is_followup = any(w in query for w in ['more', 'fix', 'how', 'details', 'tell', 'explain', 'what else'])
-    
-    if 'health' in query or 'score' in query or 'why' in query or (is_followup and ('health' in last_user_query or 'score' in last_user_query)):
-        response = f"### 📊 Financial Health Executive Briefing\n\n"
-        response += f"**Summary:** Your current Financial Health Score is **{health['score']}/100 ({health['label']})**.\n\n"
-        response += "**Analysis:**\n"
-        if health.get('sub_metrics'):
-            for sm in health['sub_metrics']:
-                response += f"• **{sm['name']} ({sm['score']}/100):** {sm['explanation']} *Reason:* {sm['reason']}\n"
-        response += f"\n**Recommendation:** Cap discretionary outflows by 10% and maintain consistent goal deposits.\n"
-        response += f"**Expected Impact:** Potential +6 score increase (Target: {min(100, health['score']+6)}/100).\n"
-        response += "**Model Confidence:** 94%"
+    if not query:
+        return jsonify({'success': False, 'message': 'Please enter a question.'}), 400
 
-    elif 'improve' in query or 'advice' in query or 'recommend' in query or (is_followup and ('improve' in last_user_query or 'fix' in last_user_query)):
-        response = f"### 💡 Action Plan & Optimization Guidance\n\n"
-        response += f"**Summary:** Focused optimization steps to boost financial resilience.\n\n"
-        response += "**Analysis:**\n"
-        sub_metrics = health.get('sub_metrics', [])
-        low_metrics = [m for m in sub_metrics if m['score'] < 80]
-        if low_metrics:
-            for idx, m in enumerate(low_metrics, 1):
-                response += f"{idx}. **{m['name']} ({m['score']}/100):** {m['explanation']}\n   • *Suggestion:* {m['suggestion']}\n"
-        else:
-            response += "• All financial dimensions are operating in the Excellent tier!\n"
-        response += f"\n**Recommendation:** Reallocate surplus savings toward active investment SIPs.\n"
-        response += f"**Expected Impact:** +₹15,000 yearly yield improvement.\n"
-        response += "**Model Confidence:** 92%"
+    context = build_financial_context(user['id'])
+    ai_result = call_gemini(query, context, history=raw_history)
 
-    elif 'spend' in query or 'expense' in query or (is_followup and ('spend' in last_user_query or 'expense' in last_user_query)):
-        response = f"### 💳 Outflow & Expenditure Analysis\n\n"
-        response += f"**Summary:** Total monthly expenses recorded at **{format_currency(intel['monthly_spending'])}**.\n\n"
-        response += "**Analysis:**\n"
-        response += f"• **Daily Velocity:** {format_currency(intel['avg_daily_spending'])}/day\n"
-        response += f"• **Transactions:** {intel.get('monthly_tx_count', 0)} logged entries\n"
-        if intel.get('mom_change_pct') is not None:
-            response += f"• **MoM Trend:** {intel['mom_change_pct']:.1f}%\n"
-        response += f"\n**Recommendation:** Set a daily spending ceiling of {format_currency(intel['avg_daily_spending'] * 0.9)}.\n"
-        response += f"**Expected Impact:** Save ~{format_currency(intel['monthly_spending'] * 0.1)} monthly.\n"
-        response += "**Model Confidence:** 96%"
-
-    elif 'invest' in query or 'portfolio' in query or (is_followup and ('invest' in last_user_query or 'portfolio' in last_user_query)):
-        response = f"### 📈 Portfolio Intelligence & Asset Valuation\n\n"
-        pnl = portfolio['profit_loss']
-        pnl_str = f"+{format_currency(pnl)}" if pnl >= 0 else f"-{format_currency(abs(pnl))}"
-        response += f"**Summary:** Total Portfolio Value is **{format_currency(portfolio['current_value'])}** (Unrealized: {pnl_str}).\n\n"
-        response += "**Analysis:**\n"
-        response += f"• **Capital Invested:** {format_currency(portfolio['total_invested'])}\n"
-        response += f"• **Active Positions:** {portfolio['position_count']} holding(s)\n"
-        response += f"• **Growth Margin:** {portfolio.get('profit_loss_pct', 0.0):.1f}%\n"
-        response += f"\n**Recommendation:** Maintain a diversified 60/40 Equity & Fixed Deposit split.\n"
-        response += f"**Expected Impact:** Target CAGR of 10.5% with lowered volatility.\n"
-        response += "**Model Confidence:** 91%"
-
-    elif 'goal' in query or 'save' in query or (is_followup and ('goal' in last_user_query or 'save' in last_user_query)):
-        response = f"### 🎯 Goals & Capital Reserve Milestone\n\n"
-        response += f"**Summary:** Total saved across goals is **{format_currency(goals['total_saved'])}**.\n\n"
-        response += "**Analysis:**\n"
-        response += f"• **Target Milestone:** {format_currency(goals['total_target'])}\n"
-        response += f"• **Milestones Completed:** {goals['completed_goals']}\n"
-        response += f"• **Active Goals:** {goals['active_goals']}\n"
-        response += f"\n**Recommendation:** Automate a monthly SIP deposit toward your primary goal.\n"
-        response += f"**Expected Impact:** Accelerate completion date by 45 days.\n"
-        response += "**Model Confidence:** 95%"
-
+    # Format output for frontend rendering
+    response_text = f"### 💡 {ai_result['source']}\n\n"
+    if ai_result.get('is_conversational') or (not ai_result.get('observations') and not ai_result.get('recommendations')):
+        response_text += f"{ai_result['summary']}\n\n"
     else:
-        response = f"### 🤖 Executive Briefing for {user['name']}\n\n"
-        response += f"**Summary:** Overall Financial Health Score is **{health['score']}/100 ({health['label']})**.\n\n"
-        response += "**Analysis:**\n"
-        response += f"• **Monthly Outflow:** {format_currency(intel['monthly_spending'])}\n"
-        response += f"• **Portfolio Valuation:** {format_currency(portfolio['current_value'])}\n"
-        response += f"• **Goals Saved:** {format_currency(goals['total_saved'])} / {format_currency(goals['total_target'])}\n"
-        response += f"\n**Recommendation:** Ask me *'Analyze my expenses'* or *'How can I improve my health score?'*\n"
-        response += f"**Expected Impact:** Instant financial optimization.\n"
-        response += "**Model Confidence:** 95%"
+        response_text += f"**Summary:** {ai_result['summary']}\n\n"
+
+    if ai_result.get('observations'):
+        response_text += "**Key Observations:**\n"
+        for obs in ai_result['observations']:
+            response_text += f"• {obs}\n"
+        response_text += "\n"
+
+    if ai_result.get('recommendations'):
+        response_text += "**Data-Supported Recommendations:**\n"
+        for rec in ai_result['recommendations']:
+            response_text += f"1. {rec}\n"
+        response_text += "\n"
+
+    if ai_result.get('data_used'):
+        response_text += "**FinSight Context Data Used:** " + ", ".join(ai_result['data_used'])
 
     return jsonify({
         'success': True,
         'query': query,
-        'response': response
+        'response': response_text,
+        'structured': ai_result
     })
 
 
@@ -1832,45 +1934,41 @@ def api_simulate():
     portfolio = calculate_portfolio_metrics(user['id'])
     
     now = datetime.now()
-    budget_row = get_monthly_budget_row(user['id'], now.month, now.year)
+    budget_row = get_monthly_budget_row(user['id'], now.strftime('%B'), now.year)
     
     orig_expense = intel['monthly_spending']
-    orig_budget = float(budget_row['amount']) if budget_row and budget_row['amount'] else 50000.0
+    orig_budget = float(budget_row['amount']) if budget_row and budget_row['amount'] else orig_expense
     orig_invest = portfolio['current_value']
     
     new_expense = max(0.0, orig_expense - reduce_expense)
-    new_budget = max(100.0, orig_budget + change_budget)
+    new_budget = max(100.0, orig_budget + change_budget) if orig_budget > 0 else (100.0 + change_budget)
     new_invest = orig_invest + add_investment
     
     new_util = round((new_expense / new_budget) * 100, 1) if new_budget > 0 else 0
     new_savings = max(0.0, new_budget - new_expense)
     
-    # Calculate simulated health score
-    sim_deductions = 0
-    if new_util > 100:
-        sim_deductions += min(40, int((new_util - 100) * 0.4) + 15)
-    elif new_util >= 85:
-        sim_deductions += 10
-    elif new_util >= 70:
-        sim_deductions += 5
+    # Reuse identical Health Score engine for 100% dashboard consistency
+    sim_health = calculate_health_score_detailed(
+        user['id'],
+        custom_expenses=new_expense,
+        custom_budget=new_budget,
+        custom_investments=new_invest
+    )
+    sim_score = sim_health['score']
     
-    sim_score = max(10, 100 - sim_deductions)
-    
-    # Advanced metrics calculation
-    yearly_savings = (reduce_expense + (new_savings - max(0.0, orig_budget - orig_expense))) * 12
-    yearly_benefit = max(0.0, yearly_savings + (add_investment * 12 * 0.10))
+    yearly_savings = (reduce_expense + max(0.0, new_savings - max(0.0, orig_budget - orig_expense))) * 12
+    annual_investment_contribution = add_investment * 12
     
     risk_level = 'Low' if new_util < 75 else ('Moderate' if new_util <= 95 else 'High')
-    opportunity_score = min(100, int((reduce_expense / 20000 * 40) + (add_investment / 50000 * 60)))
-    confidence_score = 94 if new_util <= 85 else 78
-    success_probability = min(98, max(45, int(100 - new_util * 0.4)))
+    opp_base_exp = max(1000.0, orig_expense)
+    opp_base_inv = max(5000.0, orig_invest + 5000.0)
+    opportunity_score = min(100, int((reduce_expense / opp_base_exp * 50) + (add_investment / opp_base_inv * 50)))
     
-    # Detailed reason why score changed
     reasons = []
     if reduce_expense > 0:
-        reasons.append(f"Reducing monthly expenses by {format_currency(reduce_expense)} lowers your budget utilization to {new_util}%.")
+        reasons.append(f"Reducing monthly expenses by {format_currency(reduce_expense)} lowers budget utilization to {new_util}%.")
     if add_investment > 0:
-        reasons.append(f"Adding {format_currency(add_investment)} monthly investments accelerates long-term wealth growth.")
+        reasons.append(f"Adding {format_currency(add_investment)} monthly investments totals {format_currency(annual_investment_contribution)} in annual contributions.")
     if change_budget > 0:
         reasons.append(f"Increasing budget ceiling by {format_currency(change_budget)} provides additional spending buffer.")
     
@@ -1885,11 +1983,11 @@ def api_simulate():
             'utilization': new_util,
             'savings': new_savings,
             'health_score': sim_score,
+            'health_label': sim_health['label'],
             'risk_level': risk_level,
             'opportunity_score': opportunity_score,
-            'confidence_score': confidence_score,
-            'success_probability': success_probability,
-            'yearly_benefit': round(yearly_benefit, 2),
+            'annual_contribution': round(annual_investment_contribution, 2),
+            'yearly_savings': round(yearly_savings, 2),
             'explanation': explanation
         }
     })
@@ -1902,16 +2000,12 @@ def api_scan_receipt():
     if not user:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 401
         
-    now_str = datetime.now().strftime('%Y-%m-%d')
     return jsonify({
-        'success': True,
-        'merchant': 'Starbucks Coffee',
-        'amount': 480.00,
-        'category': 'Food',
-        'date': now_str,
-        'tax': 24.00,
-        'description': 'Scanned Receipt - Beverage & Pastry'
-    })
+        'success': False,
+        'available': False,
+        'status': 'coming_soon',
+        'message': 'Receipt scanning is coming soon. Please enter the expense manually.'
+    }), 200
 
 
 @app.route('/api/predictions', methods=['GET'])
@@ -1950,4 +2044,13 @@ def file_too_large(e):
 # Entry Point
 # ==========================================================================
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Determine debug mode from environment, defaulting to True for local dev only
+    debug_mode = os.environ.get('FLASK_DEBUG', '1').lower() in ('true', '1')
+    if os.environ.get('FLASK_ENV') == 'production':
+        debug_mode = False
+    
+    # Cloud Run or container environments provide PORT as an environment variable (default 5000 for local dev)
+    port = int(os.environ.get('PORT', 5000))
+    # In production/container mode, bind to 0.0.0.0; for local debug, default host is 127.0.0.1
+    host = '0.0.0.0' if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('PORT') else '127.0.0.1'
+    app.run(host=host, port=port, debug=debug_mode)
