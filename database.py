@@ -2,6 +2,11 @@ import os
 import re
 import sqlite3
 from flask import g
+from dotenv import load_dotenv
+
+# Load environment variables from project root .env if present
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+load_dotenv(_env_path)
 
 try:
     import psycopg2
@@ -103,11 +108,14 @@ def translate_sql_for_postgres(sql):
     # 4. Normalize double-quoted literal values following = or LIKE/ILIKE to standard single-quoted literals
     translated = re.sub(r'(=|LIKE|ILIKE)\s*"([^"]+)"', r"\1 '\2'", translated, flags=re.IGNORECASE)
 
-    # 5. Replace '?' with '%s' outside quotes
+    # 5. Escape literal '%' to '%%' for psycopg2 and replace '?' with '%s' outside quotes
     out = []
     in_single = False
     in_double = False
-    for c in translated:
+    i = 0
+    n = len(translated)
+    while i < n:
+        c = translated[i]
         if c == "'" and not in_double:
             in_single = not in_single
             out.append(c)
@@ -116,8 +124,15 @@ def translate_sql_for_postgres(sql):
             out.append(c)
         elif c == '?' and not in_single and not in_double:
             out.append('%s')
+        elif c == '%':
+            if i + 1 < n and translated[i + 1] == '%':
+                out.append('%%')
+                i += 1
+            else:
+                out.append('%%')
         else:
             out.append(c)
+        i += 1
     return "".join(out)
 
 
