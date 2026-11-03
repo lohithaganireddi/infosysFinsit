@@ -1235,6 +1235,13 @@ def calculate_activity_timeline(user_id):
     yesterday_str = (now - timedelta(days=1)).strftime('%Y-%m-%d')
     week_start_str = (now - timedelta(days=now.weekday())).strftime('%Y-%m-%d')
 
+    def _to_date_str(val):
+        if not val:
+            return today_str
+        if hasattr(val, 'strftime'):
+            return val.strftime('%Y-%m-%d')
+        return str(val)[:10]
+
     events = []
 
     # 1. Income Entries
@@ -1243,7 +1250,7 @@ def calculate_activity_timeline(user_id):
         (user_id,)
     ).fetchall()]
     for i in inc_rows:
-        date_val = i['income_date'] or (i['created_at'][:10] if i['created_at'] else today_str)
+        date_val = _to_date_str(i['income_date'] or i['created_at'])
         events.append({
             'type': 'income',
             'title': f"Income Received: {i['source']}",
@@ -1261,7 +1268,7 @@ def calculate_activity_timeline(user_id):
         (user_id,)
     ).fetchall()]
     for e in exp_rows:
-        date_val = e['expense_date'] or (e['created_at'][:10] if e['created_at'] else today_str)
+        date_val = _to_date_str(e['expense_date'] or e['created_at'])
         events.append({
             'type': 'expense',
             'title': f"Expense Logged: {e['category']}",
@@ -1279,7 +1286,7 @@ def calculate_activity_timeline(user_id):
         (user_id,)
     ).fetchall()]
     for g in goal_rows:
-        date_val = g['created_at'][:10] if g['created_at'] else today_str
+        date_val = _to_date_str(g['created_at'])
         is_done = g['status'] == 'Completed'
         events.append({
             'type': 'goal',
@@ -1298,7 +1305,7 @@ def calculate_activity_timeline(user_id):
         (user_id,)
     ).fetchall()]
     for i in inv_rows:
-        date_val = i['created_at'][:10] if i['created_at'] else today_str
+        date_val = _to_date_str(i['created_at'])
         asset_title = i.get('investment_name') or i.get('investment_type') or 'Investment'
         c_price = float(i.get('current_price') or i.get('purchase_price') or 0)
         qty = float(i.get('quantity') or 1)
